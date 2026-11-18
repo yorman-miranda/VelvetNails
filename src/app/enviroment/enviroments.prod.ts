@@ -1,7 +1,7 @@
 
 export const environment = {
   production: true,
-  apiUrl: 'https://your-api-domain.com/api', // URL de producción
+  apiUrl: 'https://backendvn.onrender.com', // URL de producción
   appName: '',
   version: '1.0.0'
 };
