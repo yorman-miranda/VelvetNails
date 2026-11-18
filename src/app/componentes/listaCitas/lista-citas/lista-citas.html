@@ -1,0 +1,478 @@
+<!-- <section class="cronograma" aria-labelledby="titulo-cronograma">
+  <header class="encabezado">
+    <p class="etiqueta">{{ vista === 'admin' ? 'ADMINISTRACIÓN' : 'AGENDA' }}</p>
+    <h1 id="titulo-cronograma">
+      {{ vista === 'admin' ? 'Administrar agenda' : permiteAgendar ? 'Agenda tu cita' : 'Ver disponibilidad' }}
+    </h1>
+    <p>Horario habitual: 08:00 a 17:00. Las citas duran 2 o 3 horas; pueden existir horarios especiales por fecha.</p>
+  </header>
+
+  @if (vista === 'admin') {
+    <section class="panel panel-cierres" aria-labelledby="titulo-cierres">
+      <header class="panel-header">
+        <div class="icono-panel" aria-hidden="true">×</div>
+        <div>
+          <h2 id="titulo-cierres">Días sin atención</h2>
+          <p>Los días cerrados no aparecerán como disponibles para agendar.</p>
+        </div>
+      </header>
+
+      <form class="form-cierre" (ngSubmit)="cerrarDia()">
+        <div class="campo">
+          <label for="fechaCierre">Selecciona un día para cerrar</label>
+          <input id="fechaCierre" name="fechaCierre" type="date" [(ngModel)]="fechaCierre" required>
+        </div>
+        <button type="submit" [disabled]="!fechaCierre || diasCerrados.includes(fechaCierre)">
+          No agendar este día
+        </button>
+      </form>
+
+      @if (diasCerrados.length > 0) {
+        <ul class="dias-cerrados">
+          @for (dia of diasCerrados; track dia) {
+            <li>
+              <span class="texto-tachado">{{ formatearFecha(dia) }} — No se agendan citas</span>
+              <button type="button" class="boton-abrir" (click)="abrirDia(dia)">Reabrir día</button>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="sin-cierres">No hay días cerrados.</p>
+      }
+    </section>
+
+    <section class="panel panel-admin-citas" aria-labelledby="titulo-citas-admin">
+      <header class="panel-header">
+        <div class="icono-panel" aria-hidden="true">✓</div>
+        <div>
+          <h2 id="titulo-citas-admin">Citas agendadas</h2>
+          <p>Marca la asistencia desde la parte superior de cada cita.</p>
+        </div>
+      </header>
+
+      @if (errorAsistencia()) {
+        <p class="estado error" role="alert">{{ errorAsistencia() }}</p>
+      }
+      @if (errorPago()) {
+        <p class="estado error" role="alert">{{ errorPago() }}</p>
+      }
+
+      @if (cargando()) {
+        <p class="estado" role="status">Cargando citas...</p>
+      } @else if (errorCarga()) {
+        <p class="estado error" role="alert">{{ errorCarga() }}</p>
+      } @else if (agenda().length === 0) {
+        <p class="estado">No hay citas agendadas.</p>
+      } @else {
+        @for (dia of agenda(); track dia.key) {
+          <section class="grupo-dia">
+            <h3 [class.texto-tachado]="diasCerrados.includes(dia.key)">{{ dia.etiqueta }}</h3>
+            @if (diasCerrados.includes(dia.key)) {
+              <p class="aviso-cerrado">No se agendan citas este día. Hay citas ya registradas.</p>
+            }
+            <div class="citas-dia">
+              @for (cita of dia.citas; track cita.idCita) {
+                <article class="tarjeta-cita">
+                  <div class="tarjeta-top">
+                    <time class="hora">{{ cita.horaCita }}:00</time>
+                    <button
+                      type="button"
+                      class="boton-asistencia"
+                      [class.confirmada]="cita.asistio"
+                      [disabled]="actualizandoId() !== null"
+                      [attr.aria-label]="cita.asistio ? 'Quitar confirmación de asistencia' : 'Confirmar asistencia'"
+                      [attr.aria-pressed]="!!cita.asistio"
+                      (click)="marcarAsistencia(cita)">
+                      <span aria-hidden="true">✓</span>
+                      {{ cita.asistio ? 'Asistió' : 'Marcar asistencia' }}
+                    </button>
+                  </div>
+                  <h4>{{ cita.cliente.nombre }} {{ cita.cliente.apellido }}</h4>
+                  <a class="telefono" [href]="'tel:' + cita.cliente.telefono">{{ cita.cliente.telefono }}</a>
+                  <p class="duracion">Duración: {{ cita.tiempoCita }} horas</p>
+                </article>
+              }
+            </div>
+          </section>
+        }
+      }
+    </section>
+  } @else {
+    <section class="panel panel-disponibilidad" aria-labelledby="titulo-disponibilidad">
+      <header class="panel-header">
+        <div class="icono-panel cliente-icono" aria-hidden="true">◷</div>
+        <div>
+          <h2 id="titulo-disponibilidad">Cupos disponibles</h2>
+          <p>Selecciona un día y la duración para consultar horarios libres.</p>
+        </div>
+      </header>
+
+      <div class="filtros">
+        <div class="campo">
+          <label for="fechaSeleccionada">Día</label>
+          <input id="fechaSeleccionada" name="fechaSeleccionada" type="date"
+            [min]="fechaMinima" [(ngModel)]="fechaSeleccionada">
+        </div>
+        <div class="campo">
+          <label for="duracionSeleccionada">Duración</label>
+          <select id="duracionSeleccionada" name="duracionSeleccionada"
+            [ngModel]="duracionSeleccionada" (ngModelChange)="cambiarDuracion($event)">
+            <option value="2">2 horas</option>
+            <option value="3">3 horas</option>
+          </select>
+        </div>
+      </div>
+
+      @if (esDiaCerrado) {
+        <p class="estado dia-cerrado" role="status">
+          <span class="texto-tachado">{{ formatearFecha(fechaSeleccionada) }}</span>
+          <strong>No se agendan citas este día.</strong>
+        </p>
+      } @else if (cargando()) {
+        <p class="estado" role="status">Consultando horarios...</p>
+      } @else if (errorCarga()) {
+        <p class="estado error" role="alert">{{ errorCarga() }}</p>
+      } @else {
+        @if (citasSeleccionadas.length > 0) {
+          <div class="ocupaciones">
+            <h3>Horarios ocupados</h3>
+            @for (cita of citasSeleccionadas; track cita.idCita) {
+              <span class="ocupado">{{ cita.horaCita }}:00 · {{ cita.tiempoCita }} h</span>
+            }
+          </div>
+        }
+
+        <div class="cupos">
+          <h3>Horarios disponibles — {{ duracionSeleccionada }} horas</h3>
+          @if (cuposDisponibles.length > 0) {
+            <div class="lista-cupos">
+              @for (cupo of cuposDisponibles; track cupo.hora) {
+                <button
+                  type="button"
+                  class="cupo"
+                  [class.reservable]="permiteAgendar"
+                  [disabled]="!permiteAgendar"
+                  (click)="agendarCupo(cupo)">
+                  {{ cupo.hora }}:00
+                  @if (permiteAgendar) {
+                    <span>Agendar</span>
+                  }
+                </button>
+              }
+            </div>
+          } @else {
+            <p class="estado">No quedan cupos para esta duración en el día seleccionado.</p>
+          }
+        </div>
+
+        @if (duracionSeleccionada === 3) {
+          <p class="nota-regla">
+            La cita de 3 horas solo puede ser la primera (08:00) o la última (14:00) del día,
+            y solo se permite una por día.
+          </p>
+        }
+      }
+    </section>
+  }
+</section> -->
+
+<section class="cronograma"
+  [attr.aria-label]="vista === 'admin' ? 'Administración de citas' : null"
+  [attr.aria-labelledby]="vista !== 'admin' ? 'titulo-cronograma' : null">
+  @if (vista !== 'admin') {
+    <header class="encabezado">
+      <p class="etiqueta">AGENDA</p>
+      <h1 id="titulo-cronograma">{{ permiteAgendar ? 'Agenda tu cita' : 'Ver disponibilidad' }}</h1>
+      <p>Horario de atención: 08:00 a 17:00. Las citas duran 2 o 3 horas.</p>
+    </header>
+  }
+
+  @if (vista === 'admin') {
+    @if (modoAdmin === 'citas') {
+      <section class="panel panel-admin-citas" aria-labelledby="titulo-citas-admin">
+      <header class="panel-header">
+        <div class="icono-panel" aria-hidden="true">✓</div>
+        <div>
+          <h2 id="titulo-citas-admin">Citas</h2>
+          <p>Revisa el pago de cada solicitud y confirma o rechaza su reserva.</p>
+        </div>
+      </header>
+
+      @if (errorAsistencia()) {
+        <p class="estado error" role="alert">{{ errorAsistencia() }}</p>
+      }
+      @if (errorPago()) {
+        <p class="estado error" role="alert">{{ errorPago() }}</p>
+      }
+
+      <div class="filtros-citas-admin" role="group" aria-label="Filtrar citas por estado">
+        <button type="button"
+          [class.activo]="filtroEstado() === 'PENDIENTE_PAGO'"
+          [attr.aria-pressed]="filtroEstado() === 'PENDIENTE_PAGO'"
+          (click)="filtroEstado.set('PENDIENTE_PAGO')">
+          Pendientes <span>{{ cantidadCitas('PENDIENTE_PAGO') }}</span>
+        </button>
+        <button type="button"
+          [class.activo]="filtroEstado() === 'CONFIRMADA'"
+          [attr.aria-pressed]="filtroEstado() === 'CONFIRMADA'"
+          (click)="filtroEstado.set('CONFIRMADA')">
+          Confirmadas <span>{{ cantidadCitas('CONFIRMADA') }}</span>
+        </button>
+      </div>
+
+      @if (cargando()) {
+        <p class="estado" role="status">Cargando citas...</p>
+      } @else if (errorCarga()) {
+        <p class="estado error" role="alert">{{ errorCarga() }}</p>
+      } @else if (citasAdminFiltradas.length === 0) {
+        <p class="estado">
+          {{ filtroEstado() === 'PENDIENTE_PAGO'
+            ? 'No hay citas pendientes de pago.'
+            : 'No hay citas confirmadas.' }}
+        </p>
+      } @else {
+        <div class="lista-citas-admin">
+          @for (cita of citasAdminFiltradas; track cita.idCita) {
+            <article class="tarjeta-cita-admin"
+              [class.pendiente]="estadoCitaDe(cita) === 'PENDIENTE_PAGO'"
+              [class.confirmada]="estadoCitaDe(cita) === 'CONFIRMADA'">
+              <div class="cita-admin-detalle">
+                <p class="cita-admin-fecha">
+                  {{ cita.dia }}/{{ cita.mes }}/{{ cita.anio }} · {{ cita.horaCita }}:00
+                  <span>{{ cita.tiempoCita }} h</span>
+                </p>
+                <h3>{{ cita.cliente.nombre }} {{ cita.cliente.apellido }}</h3>
+                <a [href]="'tel:' + cita.cliente.telefono">{{ cita.cliente.telefono }}</a>
+              </div>
+              <span class="etiqueta-estado-cita"
+                [class.pendiente]="estadoCitaDe(cita) === 'PENDIENTE_PAGO'"
+                [class.confirmada]="estadoCitaDe(cita) === 'CONFIRMADA'">
+                {{ estadoCitaDe(cita) === 'PENDIENTE_PAGO' ? 'Pendiente de pago' : 'Pago confirmado' }}
+              </span>
+              <div class="acciones-cita-admin">
+                @if (estadoCitaDe(cita) === 'PENDIENTE_PAGO') {
+                  <button type="button" class="accion-confirmar"
+                    [disabled]="actualizandoId() !== null"
+                    (click)="actualizarEstadoCita(cita, 'CONFIRMADA')">
+                    Confirmar pago
+                  </button>
+                  <button type="button" class="accion-rechazar"
+                    [disabled]="actualizandoId() !== null"
+                    (click)="actualizarEstadoCita(cita, 'RECHAZADA')">
+                    Rechazar cita
+                  </button>
+                } @else {
+                  <button type="button" class="boton-asistencia"
+                    [class.confirmada]="cita.asistio"
+                    [disabled]="actualizandoId() !== null"
+                    [attr.aria-pressed]="!!cita.asistio"
+                    (click)="marcarAsistencia(cita)">
+                    {{ cita.asistio ? 'Asistió' : 'Marcar asistencia' }}
+                  </button>
+                  <button type="button" class="accion-pendiente"
+                    [disabled]="actualizandoId() !== null"
+                    (click)="actualizarEstadoCita(cita, 'PENDIENTE_PAGO')">
+                    Volver a pendiente
+                  </button>
+                }
+              </div>
+            </article>
+          }
+        </div>
+      }
+      </section>
+    } @else {
+      <section class="panel panel-admin-calendario" aria-labelledby="titulo-calendario-admin">
+        <header class="panel-header">
+          <div class="icono-panel" aria-hidden="true">▤</div>
+          <div>
+            <h2 id="titulo-calendario-admin">Calendario semanal</h2>
+            <p>Selecciona una cita para consultar los datos y registrar la asistencia.</p>
+          </div>
+        </header>
+
+        @if (errorAsistencia()) {
+          <p class="estado error" role="alert">{{ errorAsistencia() }}</p>
+        }
+
+        @if (cargando()) {
+          <p class="estado" role="status">Cargando citas...</p>
+        } @else if (errorCarga()) {
+          <p class="estado error" role="alert">{{ errorCarga() }}</p>
+        } @else {
+          <div class="calendario-wrapper">
+            <div class="calendario-nav">
+              <button type="button" class="boton-nav" (click)="semanaAnterior()" aria-label="Semana anterior">‹</button>
+              <button type="button" class="boton-nav boton-hoy" (click)="irASemanaActual()">Hoy</button>
+              <button type="button" class="boton-nav" (click)="semanaSiguiente()" aria-label="Semana siguiente">›</button>
+              <span class="rango-semana">{{ rangoSemana }}</span>
+            </div>
+
+            @if (citasCalendario.length === 0) {
+              <p class="estado">No hay citas esta semana.</p>
+            }
+
+            <div class="calendario" role="grid" aria-label="Calendario semanal de citas">
+              <div class="calendario-esquina" aria-hidden="true"
+                [style.grid-row]="1" [style.grid-column]="1"></div>
+              @for (dia of diasSemana; track dia.fecha; let columna = $index) {
+                <div class="calendario-dia-header"
+                  [class.es-hoy]="dia.esHoy"
+                  [class.es-cerrado]="dia.esCerrado"
+                  [style.grid-row]="1" [style.grid-column]="columna + 2">
+                  {{ dia.etiqueta }}
+                </div>
+              }
+
+              @for (hora of horas; track hora; let fila = $index) {
+                <div class="calendario-hora"
+                  [style.grid-row]="fila + 2" [style.grid-column]="1">{{ hora }}:00</div>
+                @for (dia of diasSemana; track dia.fecha; let columna = $index) {
+                  <div class="calendario-celda"
+                    [class.es-hoy]="dia.esHoy"
+                    [class.es-cerrado]="dia.esCerrado"
+                    [style.grid-row]="fila + 2" [style.grid-column]="columna + 2"></div>
+                }
+              }
+
+              @for (cita of citasCalendario; track cita.idCita) {
+                <button type="button" class="evento-cita-admin"
+                  [class.pendiente]="estadoCitaDe(cita) === 'PENDIENTE_PAGO'"
+                  [class.confirmada]="estadoCitaDe(cita) === 'CONFIRMADA'"
+                  [class.rechazada]="estadoCitaDe(cita) === 'RECHAZADA'"
+                  [style.grid-row]="cita.fila + 2"
+                  [style.grid-column]="cita.columna + 2"
+                  [attr.aria-label]="'Cita de ' + cita.cliente.nombre + ' ' + cita.cliente.apellido +
+                    ', ' + cita.dia + '/' + cita.mes + '/' + cita.anio + ' a las ' + cita.horaCita + ':00'"
+                  [attr.aria-pressed]="citaCalendarioSeleccionada()?.idCita === cita.idCita"
+                  (click)="seleccionarCitaCalendario(cita)">
+                  <time>{{ cita.horaCita }}:00</time>
+                </button>
+              }
+            </div>
+          </div>
+
+          @if (citaCalendarioSeleccionada(); as cita) {
+            <div class="detalle-cita-backdrop">
+              <section class="detalle-cita-calendario" role="dialog" aria-modal="true"
+                aria-labelledby="titulo-detalle-cita" tabindex="-1"
+                (keydown.escape)="citaCalendarioSeleccionada.set(null)">
+              <header>
+                <h3 id="titulo-detalle-cita">Información de la cita</h3>
+                <button type="button" class="cerrar-detalle-cita"
+                  aria-label="Cerrar información de la cita"
+                  (click)="citaCalendarioSeleccionada.set(null)">×</button>
+              </header>
+              <dl>
+                <div><dt>Cliente</dt><dd>{{ cita.cliente.nombre }} {{ cita.cliente.apellido }}</dd></div>
+                <div><dt>Documento</dt><dd>{{ cita.cliente.documento }}</dd></div>
+                <div><dt>Teléfono</dt><dd><a [href]="'tel:' + cita.cliente.telefono">{{ cita.cliente.telefono }}</a></dd></div>
+                <div><dt>Fecha</dt><dd>{{ cita.dia }}/{{ cita.mes }}/{{ cita.anio }}</dd></div>
+                <div><dt>Hora</dt><dd>{{ cita.horaCita }}:00 · {{ cita.tiempoCita }} horas</dd></div>
+                <div><dt>Pago</dt><dd>{{ estadoCitaDe(cita) === 'PENDIENTE_PAGO' ? 'Pendiente' :
+                  estadoCitaDe(cita) === 'CONFIRMADA' ? 'Confirmado' : 'Rechazado' }}</dd></div>
+              </dl>
+              @if (estadoCitaDe(cita) !== 'RECHAZADA') {
+                <button type="button" class="boton-asistencia"
+                  [class.confirmada]="cita.asistio"
+                  [disabled]="actualizandoId() !== null"
+                  [attr.aria-pressed]="!!cita.asistio"
+                  (click)="marcarAsistencia(cita)">
+                  {{ cita.asistio ? 'Marcar como no asistió' : 'Marcar como asistió' }}
+                </button>
+              }
+              </section>
+            </div>
+          }
+        }
+      </section>
+    }
+  } @else {
+    <!-- Vista cliente: filtros + calendario semanal -->
+    <section class="panel panel-disponibilidad" aria-labelledby="titulo-disponibilidad">
+      <header class="panel-header">
+        <div class="icono-panel cliente-icono" aria-hidden="true">◷</div>
+        <div>
+          <h2 id="titulo-disponibilidad">Disponibilidad semanal</h2>
+          <p>Selecciona un cupo libre. Al enviar la solicitud, el horario queda reservado hasta que se revise el adelanto.</p>
+        </div>
+      </header>
+
+      <div class="filtros">
+        <div class="campo">
+          <label for="duracionSeleccionada">Duración</label>
+          <select id="duracionSeleccionada" name="duracionSeleccionada"
+            [ngModel]="duracionSeleccionada" (ngModelChange)="cambiarDuracion($event)">
+            <option value="2">2 horas</option>
+            <option value="3">3 horas</option>
+          </select>
+        </div>
+      </div>
+
+      @if (cargando()) {
+        <p class="estado" role="status">Consultando horarios...</p>
+      } @else if (errorCarga()) {
+        <p class="estado error" role="alert">{{ errorCarga() }}</p>
+      } @else {
+        <div class="calendario-wrapper">
+          <div class="calendario-nav">
+            <button type="button" class="boton-nav" (click)="semanaAnterior()" aria-label="Semana anterior">‹</button>
+            <button type="button" class="boton-nav boton-hoy" (click)="irASemanaActual()">Hoy</button>
+            <button type="button" class="boton-nav" (click)="semanaSiguiente()" aria-label="Semana siguiente">›</button>
+            <span class="rango-semana">{{ rangoSemana }}</span>
+          </div>
+
+          <div class="calendario" role="grid" aria-label="Calendario semanal de disponibilidad">
+            <div class="calendario-esquina" aria-hidden="true"></div>
+            @for (dia of diasSemana; track dia.fecha) {
+              <button type="button" class="calendario-dia-header"
+                   [class.es-hoy]="dia.esHoy"
+                   [class.es-cerrado]="dia.esCerrado"
+                   [class.seleccionado]="fechaSeleccionada === dia.fecha"
+                   [disabled]="dia.fecha < (permiteAgendar ? fechaMinimaAgendable : fechaMinima)"
+                   [attr.aria-label]="'Seleccionar ' + formatearFecha(dia.fecha)"
+                   [attr.aria-pressed]="fechaSeleccionada === dia.fecha"
+                   (click)="seleccionarFecha(dia.fecha)">
+                {{ dia.etiqueta }}
+              </button>
+            }
+
+            @for (hora of horas; track hora) {
+              <div class="calendario-hora">{{ hora }}:00</div>
+              @for (dia of diasSemana; track dia.fecha; let col = $index) {
+                <div class="calendario-celda"
+                     [class.es-hoy]="dia.esHoy"
+                     [class.es-cerrado]="dia.esCerrado">
+                  @if (permiteAgendar && !dia.esCerrado && dia.fecha >= fechaMinimaAgendable) {
+                    @for (cupo of cuposDisponibles; track cupo.hora) {
+                      @if (cupo.hora === hora && dia.fecha === fechaSeleccionada) {
+                        <button type="button" class="cupo-calendario"
+                                (click)="agendarCupo(cupo)">
+                          {{ cupo.hora }}:00 · {{ cupo.duracion }}h
+                        </button>
+                      }
+                    }
+                  }
+                  @for (cita of citasDeColumna(col); track cita.idCita) {
+                    @if (cita.horaCita === hora) {
+                      <article class="cita-calendario ocupada"
+                               [style.grid-row]="(cita.fila + 1) + ' / span ' + cita.span">
+                        <time class="cita-hora">{{ cita.horaCita }}:00</time>
+                        <p class="cita-duracion">Ocupado · {{ cita.tiempoCita }} h</p>
+                      </article>
+                    }
+                  }
+                </div>
+              }
+            }
+          </div>
+        </div>
+
+        <p class="nota-regla">
+          La cita de 3 horas solo puede ser la primera (08:00) o la última (14:00) del día,
+          y solo se permite una por día.
+        </p>
+      }
+    </section>
+  }
+</section>

@@ -1,0 +1,122 @@
+<main class="pagina-modificar">
+  <section class="tarjeta" aria-labelledby="titulo-modificar">
+    <header>
+      <p class="etiqueta">MIS CITAS</p>
+      <h1 id="titulo-modificar">Modificar cita</h1>
+      <p>Busca tus citas con el documento o teléfono registrado.</p>
+    </header>
+
+    <form class="busqueda" (ngSubmit)="buscar()">
+      <div class="campo">
+        <label for="tipoBusqueda">Buscar por</label>
+        <select id="tipoBusqueda" name="tipoBusqueda" [(ngModel)]="tipoBusqueda">
+          <option value="documento">Documento</option>
+          <option value="telefono">Teléfono</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="terminoBusqueda">
+          {{ tipoBusqueda === 'documento' ? 'Documento' : 'Teléfono' }}
+        </label>
+        <input id="terminoBusqueda" name="terminoBusqueda"
+          [type]="tipoBusqueda === 'telefono' ? 'tel' : 'text'"
+          [(ngModel)]="terminoBusqueda" required>
+      </div>
+      <button type="submit" [disabled]="buscando || !terminoBusqueda.trim()">
+        {{ buscando ? 'Buscando...' : 'Buscar citas' }}
+      </button>
+    </form>
+
+    @if (mensajeError) {
+      <p class="mensaje error" role="alert">{{ mensajeError }}</p>
+    }
+    @if (mensajeInfo) {
+      <p class="mensaje info" role="status">{{ mensajeInfo }}</p>
+    }
+    @if (mensajeExito) {
+      <p class="mensaje exito" role="status">{{ mensajeExito }}</p>
+    }
+
+    @if (clientesEncontrados.length > 1 && !clienteSeleccionado) {
+      <section class="resultados" aria-labelledby="titulo-clientes">
+        <h2 id="titulo-clientes">Selecciona tu registro</h2>
+        @for (cliente of clientesEncontrados; track cliente.idCliente) {
+          <button type="button" class="resultado-cliente" (click)="seleccionarCliente(cliente)">
+            {{ cliente.nombre }} {{ cliente.apellido }} · {{ cliente.documento }}
+          </button>
+        }
+      </section>
+    }
+
+    @if (clienteSeleccionado && citas.length > 0) {
+      <section class="resultados" aria-labelledby="titulo-citas">
+        <h2 id="titulo-citas">
+          Citas de {{ clienteSeleccionado.nombre }} {{ clienteSeleccionado.apellido }}
+        </h2>
+        <div class="lista-citas">
+          @for (cita of citas; track cita.idCita) {
+            <article class="cita">
+              <div>
+                <strong>{{ cita.dia }}/{{ cita.mes }}/{{ cita.anio }} · {{ cita.horaCita }}:00</strong>
+                <p>{{ cita.tiempoCita }} horas · {{ cita.estadoCita }}</p>
+              </div>
+              @if (esModificable(cita)) {
+                <button type="button" class="secundario" (click)="editar(cita)">
+                  Modificar
+                </button>
+              } @else {
+                <span class="aviso-plazo">{{ motivoNoModificable(cita) }}</span>
+              }
+            </article>
+          }
+        </div>
+      </section>
+    }
+
+    @if (citaSeleccionada) {
+      <form class="formulario-edicion" (ngSubmit)="guardarCambios()">
+        <h2>Nuevo horario</h2>
+        <div class="campos">
+          <div class="campo">
+            <label for="fechaModificada">Fecha</label>
+            <input id="fechaModificada" name="fechaModificada" type="date"
+              [min]="fechaMinima" [(ngModel)]="fecha" required>
+          </div>
+          <div class="campo">
+            <label for="horaModificada">Hora de inicio</label>
+            <select id="horaModificada" name="horaModificada" [(ngModel)]="horaCita">
+              @for (hora of horas; track hora) {
+                <option [ngValue]="hora">{{ hora }}:00</option>
+              }
+            </select>
+          </div>
+          <div class="campo">
+            <label for="duracionModificada">Duración</label>
+            <select id="duracionModificada" name="duracionModificada" [(ngModel)]="tiempoCita">
+              <option [ngValue]="2">2 horas</option>
+              <option [ngValue]="3">3 horas</option>
+            </select>
+          </div>
+        </div>
+        @if (formularioInvalido) {
+          <p class="mensaje error" role="status">
+            El horario no está disponible o no cumple la anticipación mínima de 24 horas.
+          </p>
+        }
+        <div class="acciones">
+          <button type="button" class="secundario" [disabled]="guardando"
+            (click)="citaSeleccionada = null">
+            Cancelar
+          </button>
+          <button type="submit" [disabled]="guardando || formularioInvalido">
+            {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
+          </button>
+        </div>
+      </form>
+    }
+
+    <footer>
+      <button type="button" class="secundario" (click)="cancelar.emit()">Volver al inicio</button>
+    </footer>
+  </section>
+</main>

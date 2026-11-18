@@ -1,0 +1,90 @@
+<main class="pagina-citas">
+  <section class="formulario-card" aria-labelledby="titulo-cita">
+    <header class="encabezado">
+      <p class="etiqueta">AGENDA</p>
+      <h1 id="titulo-cita">Solicita tu cita</h1>
+      <p class="descripcion">Completa tus datos. El cupo quedará reservado provisionalmente mientras se verifica el adelanto.</p>
+    </header>
+
+    <p class="aviso-pago" role="alert">
+      La solicitud quedará pendiente de pago. El administrador confirmará la cita cuando verifique
+      el adelanto; si la rechaza, el horario volverá a estar disponible.
+    </p>
+
+    <form (ngSubmit)="crearCita()" #formulario="ngForm">
+      <fieldset [disabled]="enviando">
+        <legend>Datos de la cita</legend>
+        <div class="campos">
+          <div class="campo">
+            <label for="fecha">Fecha</label>
+            <input id="fecha" name="fecha" type="date" [min]="fechaMinima"
+              [(ngModel)]="fecha" required>
+          </div>
+
+          <div class="campo">
+            <label for="horaCita">Hora de inicio</label>
+            <select id="horaCita" name="horaCita" [(ngModel)]="horaCita" required>
+              @for (hora of horas; track hora) {
+                <option [ngValue]="hora">{{ hora }}:00</option>
+              }
+            </select>
+          </div>
+
+          <div class="campo">
+            <label for="tiempoCita">Duración</label>
+            <select id="tiempoCita" name="tiempoCita" [(ngModel)]="tiempoCita" required>
+              <option [ngValue]="2">2 horas</option>
+              <option [ngValue]="3">3 horas</option>
+            </select>
+          </div>
+        </div>
+        @if (citaInvalida) {
+          <p class="mensaje error" role="status">
+            El día o el horario no está disponible. Elige otra fecha u hora, o consulta los horarios.
+          </p>
+        }
+      </fieldset>
+
+      <fieldset [disabled]="enviando">
+        <legend>Datos del cliente</legend>
+        <div class="campos">
+          <div class="campo">
+            <label for="nombre">Nombre</label>
+            <input id="nombre" name="nombre" type="text" autocomplete="given-name"
+              [(ngModel)]="cliente.nombre" maxlength="50" required>
+          </div>
+
+          <div class="campo">
+            <label for="apellido">Apellido</label>
+            <input id="apellido" name="apellido" type="text" autocomplete="family-name"
+              [(ngModel)]="cliente.apellido" maxlength="50" required>
+          </div>
+
+          <div class="campo">
+            <label for="documento">Documento</label>
+            <input id="documento" name="documento" type="text" autocomplete="off"
+              [(ngModel)]="cliente.documento" maxlength="15" required>
+          </div>
+
+          <div class="campo">
+            <label for="telefono">Teléfono</label>
+            <input id="telefono" name="telefono" type="tel" autocomplete="tel"
+              [(ngModel)]="cliente.telefono" maxlength="15" required>
+          </div>
+        </div>
+      </fieldset>
+
+      <p class="mensaje error" role="alert" [hidden]="!mensajeError">{{ mensajeError }}</p>
+      <p class="mensaje exito" role="status" [hidden]="!mensajeExito">{{ mensajeExito }}</p>
+
+      <div class="acciones">
+        <button type="button" class="secundario" [disabled]="enviando" (click)="cancelar.emit()">
+          Ver horarios
+        </button>
+        <button type="submit" [disabled]="enviando || formulario.invalid">
+          {{ enviando ? 'Agendando...' : 'Confirmar cita' }}
+        </button>
+      </div>
+    </form>
+  </section>
+</main>

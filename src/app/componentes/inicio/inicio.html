@@ -1,0 +1,63 @@
+<main class="inicio">
+  <section class="inicio-card">
+    <p class="etiqueta">VELVET NAILS</p>
+    <h1>Tu momento de cuidado</h1>
+    <p class="intro">Agenda tu cita o consulta los cupos disponibles.</p>
+
+    <div class="opciones">
+      <button class="opcion principal" type="button" (click)="agendar.emit()">
+        <span class="opcion-icono" aria-hidden="true">＋</span>
+        <span>
+          <strong>Agendar cita</strong>
+          <small>Elige fecha, duración y horario disponible.</small>
+        </span>
+      </button>
+
+      <button class="opcion" type="button" (click)="verDisponibilidad.emit()">
+        <span class="opcion-icono" aria-hidden="true">◷</span>
+        <span>
+          <strong>Ver disponibilidad</strong>
+          <small>Consulta los cupos libres de cada día.</small>
+        </span>
+      </button>
+
+      <button class="opcion" type="button" (click)="modificarCita.emit()">
+        <span class="opcion-icono" aria-hidden="true">↻</span>
+        <span>
+          <strong>Modificar cita</strong>
+          <small>Busca tus citas con tu documento o teléfono.</small>
+        </span>
+      </button>
+    </div>
+
+    <div class="admin-acceso">
+      @if (!mostrarLogin) {
+        <button class="enlace-admin" type="button" (click)="mostrarLogin = true">
+          Iniciar sesión como administrador
+        </button>
+      } @else {
+        <form (ngSubmit)="iniciarSesion.emit(clave)">
+          <label for="clave-admin">Clave de administrador</label>
+          <input
+            id="clave-admin"
+            name="clave"
+            type="password"
+            autocomplete="current-password"
+            [(ngModel)]="clave"
+            required>
+          @if (errorLogin) {
+            <p class="error" role="alert">{{ errorLogin }}</p>
+          }
+          <div class="acciones-login">
+            <button type="button" class="cancelar" (click)="mostrarLogin = false; clave = ''">
+              Cancelar
+            </button>
+            <button type="submit" class="entrar" [disabled]="!clave">
+              Iniciar sesión
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  </section>
+</main>

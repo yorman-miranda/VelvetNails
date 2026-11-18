@@ -1,10 +1,12 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
 import { App } from './app';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
+      providers: [provideHttpClient()],
     })
       .compileComponents();
   });
@@ -20,5 +22,31 @@ describe('App', () => {
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain('Hello, frontend');
+  });
+
+  it('opens the client appointment form from the booking action', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('.opcion.principal').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('app-realizar-cita')).not.toBeNull();
+    expect(compiled.querySelector('#titulo-cita')?.textContent).toContain('Solicita tu cita');
+    expect(compiled.querySelector('#fecha')).not.toBeNull();
+    expect(compiled.querySelector('#horaCita')).not.toBeNull();
+    expect(compiled.querySelector('#tiempoCita')).not.toBeNull();
+  });
+
+  it('opens appointment lookup from the modify action', async () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const buttons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
+    buttons.find((button) => button.textContent?.includes('Modificar cita'))?.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('app-modificar-cita')).not.toBeNull();
   });
 });

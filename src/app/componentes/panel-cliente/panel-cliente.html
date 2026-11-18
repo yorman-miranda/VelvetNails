@@ -1,0 +1,6 @@
+<app-lista-citas
+  vista="cliente"
+  [permiteAgendar]="permiteAgendar"
+  [diasCerrados]="diasCerrados"
+  [horariosPorDia]="horariosPorDia"
+  (solicitarAgendar)="solicitarAgendar.emit($event)" />

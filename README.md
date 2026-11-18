@@ -57,3 +57,9 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+## Appointment scheduling
+
+The administrator can set date-specific opening hours; dates without an override use 08:00-17:00. These overrides and closed dates are stored in the browser's `localStorage`, so they are not shared across browsers or devices.
+
+The booking API must accept and return `estadoCita` (`PENDIENTE_PAGO` or `CONFIRMADA`) on the create and update appointment endpoints for payment confirmation to persist. The frontend creates bookings as `PENDIENTE_PAGO` and requires the update response to confirm an administrator's status change.

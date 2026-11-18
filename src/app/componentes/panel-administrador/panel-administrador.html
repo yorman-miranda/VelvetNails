@@ -1,0 +1,117 @@
+<div class="admin-layout">
+  <aside class="admin-sidebar" aria-label="Menú de administración">
+    <p class="sidebar-titulo">AGENDA</p>
+    <button type="button" [class.activo]="seccion === 'citas'"
+      [attr.aria-current]="seccion === 'citas' ? 'page' : null"
+      (click)="seccion = 'citas'">
+      <span aria-hidden="true">▦</span> Citas
+    </button>
+    <button type="button" [class.activo]="seccion === 'calendario'"
+      [attr.aria-current]="seccion === 'calendario' ? 'page' : null"
+      (click)="seccion = 'calendario'">
+      <span aria-hidden="true">▤</span> Calendario
+    </button>
+    <button type="button" [class.activo]="seccion === 'horarios'"
+      [attr.aria-current]="seccion === 'horarios' ? 'page' : null"
+      (click)="seccion = 'horarios'">
+      <span aria-hidden="true">◷</span> Horario por día
+    </button>
+    <button type="button" [class.activo]="seccion === 'cierres'"
+      [attr.aria-current]="seccion === 'cierres' ? 'page' : null"
+      (click)="seccion = 'cierres'">
+      <span aria-hidden="true">×</span> Días sin atención
+    </button>
+  </aside>
+
+  <main class="admin-contenido">
+    @if (seccion === 'citas') {
+      <app-lista-citas vista="admin"
+        modoAdmin="citas"
+        [diasCerrados]="diasCerrados"
+        [horariosPorDia]="horariosPorDia" />
+    } @else if (seccion === 'calendario') {
+      <app-lista-citas vista="admin"
+        modoAdmin="calendario"
+        [diasCerrados]="diasCerrados"
+        [horariosPorDia]="horariosPorDia" />
+    } @else if (seccion === 'horarios') {
+      <section class="configuracion-admin" aria-labelledby="titulo-horarios">
+        <header>
+          <p class="etiqueta">AGENDA</p>
+          <h1 id="titulo-horarios">Horario por día</h1>
+          <p>Configura el horario de atención para una fecha específica.</p>
+        </header>
+        <section class="configuracion-card" aria-labelledby="titulo-horario-dia">
+          <h2 id="titulo-horario-dia">Horario de atención</h2>
+          <form (ngSubmit)="guardarHorario()">
+            <div class="campo">
+              <label for="fechaHorario">Fecha</label>
+              <input id="fechaHorario" name="fechaHorario" type="date" [min]="fechaMinima"
+                [(ngModel)]="fechaHorario" (ngModelChange)="cargarHorario($event)" required>
+            </div>
+            <div class="campos-horario">
+              <div class="campo">
+                <label for="horaInicio">Desde</label>
+                <select id="horaInicio" name="horaInicio" [(ngModel)]="horaInicio">
+                  @for (hora of horas; track hora) {
+                    <option [ngValue]="hora">{{ hora }}:00</option>
+                  }
+                </select>
+              </div>
+              <div class="campo">
+                <label for="horaFin">Hasta</label>
+                <select id="horaFin" name="horaFin" [(ngModel)]="horaFin">
+                  @for (hora of horas; track hora) {
+                    <option [ngValue]="hora">{{ hora }}:00</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <p class="ayuda">El horario debe permitir citas de al menos 2 horas. El horario habitual es 08:00 a 17:00.</p>
+            <div class="acciones-config">
+              <button type="submit" [disabled]="horarioInvalido">Guardar horario</button>
+              @if (horariosPorDia[fechaHorario]) {
+                <button type="button" class="secundario" (click)="quitarHorario(fechaHorario)">
+                  Usar horario habitual
+                </button>
+              }
+            </div>
+          </form>
+        </section>
+      </section>
+    } @else {
+      <section class="configuracion-admin" aria-labelledby="titulo-cierres">
+        <header>
+          <p class="etiqueta">AGENDA</p>
+          <h1 id="titulo-cierres">Días sin atención</h1>
+          <p>Marca las fechas en que no se recibirán citas.</p>
+        </header>
+        <section class="configuracion-card" aria-labelledby="titulo-cierres-form">
+          <h2 id="titulo-cierres-form">Cerrar un día</h2>
+          <form class="form-cierre" (ngSubmit)="cerrarDia()">
+            <div class="campo">
+              <label for="fechaCierre">Fecha que se cerrará</label>
+              <input id="fechaCierre" name="fechaCierre" type="date" [min]="fechaMinima"
+                [(ngModel)]="fechaCierre" required>
+            </div>
+            <button type="submit" [disabled]="!fechaCierre || fechaCerrado(fechaCierre)">
+              Cerrar día
+            </button>
+          </form>
+          @if (diasCerrados.length > 0) {
+            <ul class="dias-cerrados">
+              @for (dia of diasCerrados; track dia) {
+                <li>
+                  <span>{{ formatearFecha(dia) }}</span>
+                  <button type="button" class="secundario" (click)="abrirDia(dia)">Reabrir</button>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="ayuda">No hay días cerrados.</p>
+          }
+        </section>
+      </section>
+    }
+  </main>
+</div>
