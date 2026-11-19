@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Service, inject } from '@angular/core';
-import { environment } from '../../enviroment/enviroment';
+import { environment } from '../../enviroment/enviroments.prod';
 import { Cliente } from '../cliente/cliente.service';
 
 export interface Cita{
