@@ -220,3 +220,57 @@ footer {
     flex-direction: column;
   }
 }
+
+:host {
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+}
+
+.tarjeta,
+.formulario-edicion,
+.resultados {
+  box-sizing: border-box;
+}
+
+header p,
+.cita p,
+.mensaje,
+.aviso-plazo {
+  line-height: 1.55;
+}
+
+h1,
+h2 {
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.campo label {
+  margin-bottom: 1px;
+}
+
+.cita strong {
+  display: block;
+  line-height: 1.35;
+}
+
+.busqueda {
+  row-gap: 16px;
+}
+
+@media (max-width: 560px) {
+  .tarjeta {
+    padding: 18px 16px;
+  }
+
+  .acciones,
+  footer {
+    gap: 8px;
+  }
+
+  .acciones button,
+  footer button,
+  .resultado-cliente {
+    width: 100%;
+  }
+}

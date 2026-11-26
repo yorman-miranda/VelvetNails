@@ -250,6 +250,11 @@
                 {{ estadoCitaDe(cita) === 'PENDIENTE_PAGO' ? 'Pendiente de pago' : 'Pago confirmado' }}
               </span>
               <div class="acciones-cita-admin">
+                  <button type="button" class="accion-modificar"
+                    [disabled]="actualizandoId() !== null"
+                    (click)="iniciarEdicion(cita)">
+                    Modificar cita
+                  </button>
                 @if (estadoCitaDe(cita) === 'PENDIENTE_PAGO') {
                   <button type="button" class="accion-confirmar"
                     [disabled]="actualizandoId() !== null"
@@ -276,6 +281,45 @@
                   </button>
                 }
               </div>
+              @if (citaEnEdicion?.idCita === cita.idCita) {
+                <form class="form-edicion-cita" (ngSubmit)="guardarEdicion()">
+                  <h4>Modificar horario</h4>
+                  <div class="campos-edicion-cita">
+                    <label>
+                      Fecha
+                      <input type="date" name="fechaEdicion" [min]="fechaMinima"
+                        [(ngModel)]="fechaEdicion" (ngModelChange)="ajustarHoraEdicion()" required>
+                    </label>
+                    <label>
+                      Hora de inicio
+                      <select name="horaEdicion" [(ngModel)]="horaEdicion" required>
+                        @for (hora of horasEdicionDisponibles; track hora) {
+                          <option [ngValue]="hora">{{ hora }}:00</option>
+                        }
+                      </select>
+                    </label>
+                    <label>
+                      Duración
+                      <select name="duracionEdicion" [(ngModel)]="duracionEdicion"
+                        (ngModelChange)="cambiarDuracionEdicion($event)" required>
+                        <option [ngValue]="2">2 horas</option>
+                        <option [ngValue]="3">3 horas</option>
+                      </select>
+                    </label>
+                  </div>
+                  @if (modificacionInvalida) {
+                    <p class="mensaje-edicion">La fecha u hora no está disponible.</p>
+                  }
+                  <div class="acciones-edicion-cita">
+                    <button type="button" class="accion-cancelar" [disabled]="actualizandoId() !== null"
+                      (click)="cancelarEdicion()">Cancelar</button>
+                    <button type="submit" class="accion-confirmar"
+                      [disabled]="modificacionInvalida || actualizandoId() !== null">
+                      {{ actualizandoId() === cita.idCita ? 'Guardando...' : 'Guardar cambios' }}
+                    </button>
+                  </div>
+                </form>
+              }
             </article>
           }
         </div>

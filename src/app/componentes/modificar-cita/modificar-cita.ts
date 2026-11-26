@@ -22,6 +22,42 @@ export class ModificarCita {
 
   readonly fechaMinima = this.hoyIso();
   readonly horas = Array.from({ length: 10 }, (_, indice) => indice + 8);
+  get horasDisponibles(): number[] {
+    if (!this.fechaValida(this.fecha)) return [];
+
+    const horario = this.horariosPorDia[this.fecha] ?? { horaInicio: 8, horaFin: 17 };
+    const citasDelDia = this.citas.filter((cita) =>
+      cita.idCita !== this.citaSeleccionada?.idCita &&
+      cita.estadoCita !== 'RECHAZADA' &&
+      this.fechaDeCita(cita) === this.fecha
+    );
+    const yaHayCitaLarga = citasDelDia.some((cita) => cita.tiempoCita === 3);
+    const disponibles: number[] = [];
+
+    for (let hora = horario.horaInicio; hora + this.tiempoCita <= horario.horaFin; hora++) {
+      if (
+        this.tiempoCita === 3 &&
+        yaHayCitaLarga &&
+        hora !== horario.horaInicio &&
+        hora + 3 !== horario.horaFin
+      ) continue;
+
+      if (
+        this.tiempoCita === 3 &&
+        hora !== horario.horaInicio &&
+        hora + 3 !== horario.horaFin
+      ) continue;
+
+      if (!this.tieneAnticipacionSuficiente(this.fecha, hora)) continue;
+
+      const seCruza = citasDelDia.some((cita) =>
+        hora < cita.horaCita + cita.tiempoCita &&
+        cita.horaCita < hora + this.tiempoCita
+      );
+      if (!seCruza) disponibles.push(hora);
+    }
+    return disponibles;
+  }
   tipoBusqueda: 'documento' | 'telefono' = 'documento';
   terminoBusqueda = '';
   clientesEncontrados: Cliente[] = [];
@@ -144,6 +180,19 @@ export class ModificarCita {
     this.tiempoCita = cita.tiempoCita === 3 ? 3 : 2;
     this.mensajeError = '';
     this.mensajeExito = '';
+  }
+
+  cambiarDuracion(duracion: 2 | 3): void {
+    this.tiempoCita = duracion;
+    if (!this.horasDisponibles.includes(this.horaCita)) {
+      this.horaCita = this.horasDisponibles[0] ?? 8;
+    }
+  }
+
+  ajustarHoraDisponible(): void {
+    if (!this.horasDisponibles.includes(this.horaCita)) {
+      this.horaCita = this.horasDisponibles[0] ?? 8;
+    }
   }
 
   esModificable(cita: Cita): boolean {

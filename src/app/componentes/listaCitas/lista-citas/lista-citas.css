@@ -681,3 +681,286 @@ button {
   }
 }
 
+/* Estilos del panel administrativo de citas */
+:host,
+.panel {
+  color: #382a32;
+  font-family: Arial, sans-serif;
+  line-height: 1.45;
+}
+
+.panel {
+  min-width: 0;
+  padding: clamp(18px, 3vw, 28px);
+  border: 1px solid #f1d4df;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 14px 40px rgba(151, 81, 111, 0.1);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #f1e2e8;
+}
+
+.panel-header h2,
+.panel-header p,
+.cita-admin-detalle h3,
+.cita-admin-detalle p {
+  margin: 0;
+}
+
+.panel-header p {
+  margin-top: 5px;
+  color: #806b76;
+}
+
+.icono-panel {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  place-items: center;
+  border-radius: 14px;
+  background: #fae7ef;
+  color: #a3416c;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.estado {
+  margin: 12px 0 0;
+  padding: 14px;
+  border: 1px solid #f1d4df;
+  border-radius: 10px;
+  background: #fffafd;
+  color: #806b76;
+  text-align: center;
+}
+
+.estado.error {
+  border-color: #f2c5c1;
+  background: #fff0ef;
+  color: #9c302a;
+}
+
+.filtros-citas-admin {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.filtros-citas-admin button {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #e8c8d6;
+  border-radius: 9px;
+  background: #fff;
+  color: #684f5d;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.filtros-citas-admin button span {
+  display: inline-grid;
+  min-width: 22px;
+  height: 22px;
+  margin-left: 5px;
+  place-items: center;
+  border-radius: 999px;
+  background: #f4edf1;
+  font-size: 0.75rem;
+}
+
+.filtros-citas-admin button.activo {
+  border-color: #ad4d76;
+  background: #fae7ef;
+  color: #963d65;
+}
+
+.lista-citas-admin {
+  display: grid;
+  gap: 12px;
+}
+
+.tarjeta-cita-admin {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 16px;
+  padding: 16px;
+  border: 1px solid #f0dce5;
+  border-left: 4px solid #ad4d76;
+  border-radius: 12px;
+  background: #fffafd;
+  line-height: 1.45;
+}
+
+.cita-admin-detalle {
+  min-width: 0;
+}
+
+.cita-admin-fecha {
+  color: #806b76;
+  font-size: 0.86rem;
+}
+
+.cita-admin-fecha span {
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f4edf1;
+  color: #684f5d;
+  font-weight: 700;
+}
+
+.cita-admin-detalle h3 {
+  margin-top: 5px;
+  color: #482b3a;
+  font-size: 1.02rem;
+}
+
+.cita-admin-detalle a {
+  display: inline-block;
+  margin-top: 4px;
+  color: #8d4968;
+  text-decoration: none;
+}
+
+.etiqueta-estado-cita {
+  justify-self: end;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #edf8ef;
+  color: #28643a;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.etiqueta-estado-cita.pendiente {
+  background: #fff3dc;
+  color: #8a5a20;
+}
+
+.acciones-cita-admin,
+.acciones-edicion-cita {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.acciones-cita-admin button,
+.acciones-edicion-cita button {
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.acciones-cita-admin button:disabled,
+.acciones-edicion-cita button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.accion-confirmar {
+  background: #ad4d76;
+  color: #fff;
+}
+
+.accion-rechazar,
+.accion-cancelar {
+  border: 1px solid #e8c8d6 !important;
+  background: #fff;
+  color: #684f5d;
+}
+
+.accion-modificar,
+.accion-pendiente,
+.boton-asistencia {
+  border: 1px solid #e8c8d6;
+  background: #fff;
+  color: #684f5d;
+}
+
+.form-edicion-cita {
+  grid-column: 1 / -1;
+  padding: 14px;
+  border: 1px solid #f1d4df;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.form-edicion-cita h4 {
+  margin: 0 0 12px;
+  color: #603b4e;
+  font-size: 0.96rem;
+}
+
+.campos-edicion-cita {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.campos-edicion-cita label {
+  display: grid;
+  gap: 6px;
+  color: #55414b;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.campos-edicion-cita input,
+.campos-edicion-cita select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid #e8c8d6;
+  border-radius: 8px;
+  background: #fffafd;
+  color: #382a32;
+  font: inherit;
+}
+
+.mensaje-edicion {
+  margin: 10px 0 0;
+  color: #9c302a;
+  font-size: 0.82rem;
+}
+
+.acciones-edicion-cita {
+  margin-top: 12px;
+}
+
+@media (max-width: 560px) {
+  .tarjeta-cita-admin {
+    grid-template-columns: 1fr;
+  }
+
+  .etiqueta-estado-cita {
+    justify-self: start;
+  }
+
+  .acciones-cita-admin button,
+  .acciones-edicion-cita button {
+    width: 100%;
+  }
+
+  .campos-edicion-cita {
+    grid-template-columns: 1fr;
+  }
+}
+

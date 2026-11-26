@@ -252,6 +252,11 @@ export class ListaCitas implements OnInit {
   readonly fechaMinimaAgendable = this.sumarDias(this.fechaMinima, 2);
   fechaSeleccionada = this.fechaMinima;
   duracionSeleccionada: 2 | 3 = 2;
+  citaEnEdicion: Cita | null = null;
+  fechaEdicion = '';
+  horaEdicion = 8;
+  duracionEdicion: 2 | 3 = 2;
+  readonly horasEdicion = Array.from({ length: 10 }, (_, i) => 8 + i);
 
   /** Lunes de la semana mostrada (YYYY-MM-DD) */
   readonly semanaInicio = signal<string>(this.lunesDeLaSemana(this.hoyIso()));
@@ -409,6 +414,109 @@ export class ListaCitas implements OnInit {
     this.duracionSeleccionada = duracion === '3' ? 3 : 2;
   }
 
+  get horasEdicionDisponibles(): number[] {
+    if (!this.citaEnEdicion || !this.fechaEdicionValida) return [];
+
+    const horario = this.horariosPorDia[this.fechaEdicion] ?? { horaInicio: 8, horaFin: 17 };
+    const citasDelDia = this.citas().filter((cita) =>
+      cita.idCita !== this.citaEnEdicion?.idCita &&
+      cita.estadoCita !== 'RECHAZADA' &&
+      this.fechaDeCita(cita) === this.fechaEdicion
+    );
+    const yaHayCitaLarga = citasDelDia.some((cita) => cita.tiempoCita === 3);
+    const disponibles: number[] = [];
+
+    for (let hora = horario.horaInicio; hora + this.duracionEdicion <= horario.horaFin; hora++) {
+      if (this.duracionEdicion === 3 &&
+          (yaHayCitaLarga ||
+           (hora !== horario.horaInicio && hora + 3 !== horario.horaFin))) {
+        continue;
+      }
+      if (!this.tieneAnticipacionSuficiente(this.fechaEdicion, hora)) continue;
+
+      const seCruza = citasDelDia.some((cita) =>
+        hora < cita.horaCita + cita.tiempoCita &&
+        cita.horaCita < hora + this.duracionEdicion
+      );
+      if (!seCruza) disponibles.push(hora);
+    }
+    return disponibles;
+  }
+
+  get fechaEdicionValida(): boolean {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(this.fechaEdicion) ||
+        this.fechaEdicion < this.fechaMinima ||
+        this.diasCerrados.includes(this.fechaEdicion)) {
+      return false;
+    }
+    const [anio, mes, dia] = this.fechaEdicion.split('-').map(Number);
+    const calendario = new Date(anio, mes - 1, dia);
+    return calendario.getFullYear() === anio &&
+      calendario.getMonth() === mes - 1 &&
+      calendario.getDate() === dia;
+  }
+
+  get modificacionInvalida(): boolean {
+    return !this.citaEnEdicion ||
+      !this.fechaEdicionValida ||
+      !this.horasEdicionDisponibles.includes(this.horaEdicion);
+  }
+
+  iniciarEdicion(cita: Cita): void {
+    this.citaEnEdicion = cita;
+    this.fechaEdicion = this.fechaDeCita(cita);
+    this.horaEdicion = cita.horaCita;
+    this.duracionEdicion = cita.tiempoCita === 3 ? 3 : 2;
+  }
+
+  cancelarEdicion(): void {
+    this.citaEnEdicion = null;
+    this.fechaEdicion = '';
+    this.horaEdicion = 8;
+    this.duracionEdicion = 2;
+  }
+
+  ajustarHoraEdicion(): void {
+    if (!this.horasEdicionDisponibles.includes(this.horaEdicion)) {
+      this.horaEdicion = this.horasEdicionDisponibles[0] ?? 8;
+    }
+  }
+
+  cambiarDuracionEdicion(duracion: 2 | 3): void {
+    this.duracionEdicion = duracion;
+    this.ajustarHoraEdicion();
+  }
+
+  guardarEdicion(): void {
+    if (this.modificacionInvalida || this.actualizandoId() !== null) return;
+    const cita = this.citaEnEdicion;
+    if (!cita) return;
+
+    const [anio, mes, dia] = this.fechaEdicion.split('-').map(Number);
+    this.actualizandoId.set(cita.idCita);
+    this.errorPago.set('');
+    this.citaService.updateCita(cita.idCita, {
+      dia,
+      mes,
+      anio,
+      horaCita: this.horaEdicion,
+      tiempoCita: this.duracionEdicion,
+      idCliente: cita.cliente.idCliente,
+    }).subscribe({
+      next: (actualizada) => {
+        this.citas.update((citas) =>
+          citas.map((actual) => actual.idCita === actualizada.idCita ? actualizada : actual)
+        );
+        this.actualizandoId.set(null);
+        this.cancelarEdicion();
+      },
+      error: () => {
+        this.errorPago.set('No se pudo modificar la cita. Verifica el horario e intenta nuevamente.');
+        this.actualizandoId.set(null);
+      },
+    });
+  }
+
   agendarCupo(cupo: CupoDisponible): void {
     this.solicitarAgendar.emit({
       fecha: this.fechaSeleccionada,
@@ -497,6 +605,11 @@ export class ListaCitas implements OnInit {
       month: 'long',
       year: 'numeric',
     }).format(new Date(anio, mes - 1, dia));
+  }
+
+  private tieneAnticipacionSuficiente(fecha: string, hora: number): boolean {
+    const [anio, mes, dia] = fecha.split('-').map(Number);
+    return new Date(anio, mes - 1, dia, hora).getTime() - Date.now() >= 24 * 60 * 60 * 1000;
   }
 
   private etiquetaFechaCorta(fecha: string): string {

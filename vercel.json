@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "dist/tu-nombre-de-proyecto/browser",
+  "outputDirectory": "dist/VelvetNails/browser",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
