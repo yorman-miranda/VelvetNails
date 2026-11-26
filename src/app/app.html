@@ -6,9 +6,16 @@
     (verDisponibilidad)="abrirDisponibilidad()"
     (iniciarSesion)="intentarInicioSesion($event)" />
 } @else if (vista() === 'disponibilidad') {
-  <nav class="barra-navegacion" aria-label="Navegación">
+  <nav class="barra-navegacion"
+    [class.navegacion-disponibilidad]="!permiteAgendar()"
+    aria-label="Navegación">
     <button type="button" (click)="volverInicio()">← Inicio</button>
-    <span>{{ permiteAgendar() ? 'Agendar cita' : 'Disponibilidad' }}</span>
+    @if (permiteAgendar()) {
+      <span>Agendar cita</span>
+    } @else {
+      <span class="marca-agenda">AGENDA</span>
+      <span class="nombre-seccion">Disponibilidad</span>
+    }
   </nav>
   @if (mensajeReserva()) {
     <p class="mensaje-reserva" role="status">{{ mensajeReserva() }}</p>

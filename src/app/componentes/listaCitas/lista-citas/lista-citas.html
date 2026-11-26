@@ -177,12 +177,13 @@
 </section> -->
 
 <section class="cronograma"
-  [attr.aria-label]="vista === 'admin' ? 'Administración de citas' : null"
-  [attr.aria-labelledby]="vista !== 'admin' ? 'titulo-cronograma' : null">
-  @if (vista !== 'admin') {
+  [attr.aria-label]="vista === 'admin' ? 'Administración de citas' :
+    permiteAgendar ? null : 'Horario de atención y disponibilidad'"
+  [attr.aria-labelledby]="vista !== 'admin' && permiteAgendar ? 'titulo-cronograma' : null">
+  @if (vista !== 'admin' && permiteAgendar) {
     <header class="encabezado">
       <p class="etiqueta">AGENDA</p>
-      <h1 id="titulo-cronograma">{{ permiteAgendar ? 'Agenda tu cita' : 'Ver disponibilidad' }}</h1>
+      <h1 id="titulo-cronograma">Agenda tu cita</h1>
       <p>Horario de atención: 08:00 a 17:00. Las citas duran 2 o 3 horas.</p>
     </header>
   }
@@ -437,8 +438,8 @@
       <header class="panel-header">
         <div class="icono-panel cliente-icono" aria-hidden="true">◷</div>
         <div>
-          <h2 id="titulo-disponibilidad">Disponibilidad semanal</h2>
-          <p>Selecciona un cupo libre. Al enviar la solicitud, el horario queda reservado hasta que se revise el adelanto.</p>
+          <h2 id="titulo-disponibilidad">Horario de atención</h2>
+          <p>Horario habitual: 08:00 a 17:00. Selecciona un cupo libre; pueden existir horarios especiales por fecha.</p>
         </div>
       </header>
 

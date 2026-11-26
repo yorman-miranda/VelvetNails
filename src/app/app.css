@@ -21,6 +21,25 @@
   font: inherit;
 }
 
+.barra-navegacion.navegacion-disponibilidad {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+
+.navegacion-disponibilidad > button {
+  justify-self: start;
+}
+
+.navegacion-disponibilidad .marca-agenda {
+  color: #b34f79;
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+}
+
+.navegacion-disponibilidad .nombre-seccion {
+  justify-self: end;
+}
+
 .aviso-almacenamiento {
   margin: 14px auto 0;
   padding: 12px 16px;
