@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HorarioAtencion } from '../../service/cita/cita.service';
 import { ListaCitas } from '../listaCitas/lista-citas/lista-citas';
+import { formatearHora as formatearHora12 } from '../../utilidades/formato-hora';
 
 @Component({
   imports: [FormsModule, ListaCitas],
@@ -10,18 +11,19 @@ import { ListaCitas } from '../listaCitas/lista-citas/lista-citas';
   templateUrl: './panel-administrador.html',
 })
 export class PanelAdministrador implements OnInit {
+  readonly formatearHora = formatearHora12;
   @Input() diasCerrados: string[] = [];
   @Input() horariosPorDia: Record<string, HorarioAtencion> = {};
   @Output() diasCerradosChange = new EventEmitter<string[]>();
   @Output() horariosPorDiaChange = new EventEmitter<Record<string, HorarioAtencion>>();
 
   readonly fechaMinima = this.hoyIso();
-  readonly horas = Array.from({ length: 10 }, (_, indice) => indice + 8);
+  readonly horas = Array.from({ length: 12 }, (_, indice) => indice + 8);
   fechaCierre = '';
   fechaHorario = this.fechaMinima;
   seccion: 'citas' | 'calendario' | 'horarios' | 'cierres' = 'citas';
   horaInicio = 8;
-  horaFin = 17;
+  horaFin = 19;
 
   ngOnInit(): void {
     this.cargarHorario(this.fechaHorario);
@@ -41,7 +43,7 @@ export class PanelAdministrador implements OnInit {
   cargarHorario(fecha: string): void {
     const horario = this.horariosPorDia[fecha];
     this.horaInicio = horario?.horaInicio ?? 8;
-    this.horaFin = horario?.horaFin ?? 17;
+    this.horaFin = horario?.horaFin ?? 19;
   }
 
   quitarHorario(fecha: string): void {

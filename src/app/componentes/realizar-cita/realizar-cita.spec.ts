@@ -67,8 +67,14 @@ describe('RealizarCita', () => {
     expect(volverInicio).toHaveBeenCalledOnce();
   });
 
-  it('offers start hours from 08:00 through 17:00', () => {
-    expect(component.horas).toEqual([8, 9, 10, 11, 12, 13, 14, 15, 16, 17]);
+  it('offers start hours from 08:00 through 19:00', () => {
+    expect(component.horas).toEqual([8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]);
+  });
+
+  it('only offers three-hour slots at 08:00 or 16:00', () => {
+    component.tiempoCita = 3;
+
+    expect(component.horasDisponibles).toEqual([8, 16]);
   });
 
   it('only allows booking from the day after tomorrow', () => {

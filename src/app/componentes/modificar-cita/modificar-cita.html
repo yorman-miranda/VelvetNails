@@ -57,7 +57,7 @@
           @for (cita of citas; track cita.idCita) {
             <article class="cita">
               <div>
-                <strong>{{ cita.dia }}/{{ cita.mes }}/{{ cita.anio }} · {{ cita.horaCita }}:00</strong>
+                <strong>{{ cita.dia }}/{{ cita.mes }}/{{ cita.anio }} · {{ formatearHora(cita.horaCita) }}</strong>
                 <p>{{ cita.tiempoCita }} horas · {{ cita.estadoCita }}</p>
               </div>
               @if (esModificable(cita)) {
@@ -87,7 +87,7 @@
             <label for="horaModificada">Hora de inicio</label>
             <select id="horaModificada" name="horaModificada" [(ngModel)]="horaCita">
               @for (hora of horasDisponibles; track hora) {
-                <option [ngValue]="hora">{{ hora }}:00</option>
+                <option [ngValue]="hora">{{ formatearHora(hora) }}</option>
               }
             </select>
           </div>

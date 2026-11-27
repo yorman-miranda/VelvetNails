@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Cliente, ClienteService } from '../../service/cliente/cliente.service';
 import { ActualizarCitaRequest, Cita, CitaService, HorarioAtencion } from '../../service/cita/cita.service';
 import { finalize } from 'rxjs';
+import { formatearHora as formatearHora12 } from '../../utilidades/formato-hora';
 
 @Component({
   imports: [FormsModule],
@@ -15,38 +16,29 @@ export class ModificarCita {
   private readonly clienteService = inject(ClienteService);
   private readonly citaService = inject(CitaService);
   private readonly changeDetectorRef = inject(ChangeDetectorRef);
+  readonly formatearHora = formatearHora12;
 
   @Input() diasCerrados: string[] = [];
   @Input() horariosPorDia: Record<string, HorarioAtencion> = {};
   @Output() cancelar = new EventEmitter<void>();
 
   readonly fechaMinima = this.hoyIso();
-  readonly horas = Array.from({ length: 10 }, (_, indice) => indice + 8);
+  readonly horas = Array.from({ length: 12 }, (_, indice) => indice + 8);
   get horasDisponibles(): number[] {
     if (!this.fechaValida(this.fecha)) return [];
 
-    const horario = this.horariosPorDia[this.fecha] ?? { horaInicio: 8, horaFin: 17 };
+    const horario = this.horariosPorDia[this.fecha] ?? { horaInicio: 8, horaFin: 19 };
     const citasDelDia = this.citas.filter((cita) =>
       cita.idCita !== this.citaSeleccionada?.idCita &&
       cita.estadoCita !== 'RECHAZADA' &&
       this.fechaDeCita(cita) === this.fecha
     );
+    if (citasDelDia.length >= 5) return [];
     const yaHayCitaLarga = citasDelDia.some((cita) => cita.tiempoCita === 3);
     const disponibles: number[] = [];
 
     for (let hora = horario.horaInicio; hora + this.tiempoCita <= horario.horaFin; hora++) {
-      if (
-        this.tiempoCita === 3 &&
-        yaHayCitaLarga &&
-        hora !== horario.horaInicio &&
-        hora + 3 !== horario.horaFin
-      ) continue;
-
-      if (
-        this.tiempoCita === 3 &&
-        hora !== horario.horaInicio &&
-        hora + 3 !== horario.horaFin
-      ) continue;
+      if (this.tiempoCita === 3 && (yaHayCitaLarga || (hora !== 8 && hora !== 16))) continue;
 
       if (!this.tieneAnticipacionSuficiente(this.fecha, hora)) continue;
 
@@ -77,7 +69,7 @@ export class ModificarCita {
   get formularioInvalido(): boolean {
     if (!this.citaSeleccionada || !this.fechaValida(this.fecha)) return true;
 
-    const horario = this.horariosPorDia[this.fecha] ?? { horaInicio: 8, horaFin: 17 };
+    const horario = this.horariosPorDia[this.fecha] ?? { horaInicio: 8, horaFin: 19 };
     if (
       !Number.isInteger(this.horaCita) ||
       this.horaCita < horario.horaInicio ||
@@ -90,8 +82,8 @@ export class ModificarCita {
 
     if (
       this.tiempoCita === 3 &&
-      this.horaCita !== horario.horaInicio &&
-      this.horaCita + this.tiempoCita !== horario.horaFin
+      this.horaCita !== 8 &&
+      this.horaCita !== 16
     ) {
       return true;
     }
@@ -101,6 +93,7 @@ export class ModificarCita {
       cita.estadoCita !== 'RECHAZADA' &&
       this.fechaDeCita(cita) === this.fecha
     );
+    if (citasDelDia.length >= 5) return true;
     if (citasDelDia.some((cita) =>
       this.horaCita < cita.horaCita + cita.tiempoCita &&
       cita.horaCita < this.horaCita + this.tiempoCita

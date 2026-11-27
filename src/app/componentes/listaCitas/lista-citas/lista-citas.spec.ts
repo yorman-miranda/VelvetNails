@@ -78,13 +78,28 @@ describe('ListaCitas', () => {
     expect(component.cuposDisponibles.length).toBeGreaterThan(0);
   });
 
-  it('places a three-hour slot at either end of the configured schedule', () => {
+  it('offers three-hour slots only at 08:00 or 16:00', () => {
     const fecha = fechaFutura();
     component.fechaSeleccionada = fecha;
-    component.horariosPorDia = { [fecha]: { horaInicio: 10, horaFin: 15 } };
     component.duracionSeleccionada = 3;
 
-    expect(component.cuposDisponibles.map((cupo) => cupo.hora)).toEqual([10, 12]);
+    expect(component.cuposDisponibles.map((cupo) => cupo.hora)).toEqual([8, 16]);
+  });
+
+  it('does not offer another three-hour slot when one is already booked', () => {
+    const fecha = fechaFutura();
+    component.fechaSeleccionada = fecha;
+    component.duracionSeleccionada = 3;
+    component.citas.set([{
+      ...citaPendiente,
+      dia: Number(fecha.slice(8, 10)),
+      mes: Number(fecha.slice(5, 7)),
+      anio: Number(fecha.slice(0, 4)),
+      horaCita: 8,
+      tiempoCita: 3,
+    }]);
+
+    expect(component.cuposDisponibles).toEqual([]);
   });
 
   it('confirms payment by persisting the appointment status', () => {

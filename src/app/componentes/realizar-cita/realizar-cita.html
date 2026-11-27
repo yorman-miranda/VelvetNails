@@ -26,21 +26,22 @@
           <div class="campo">
             <label for="fecha">Fecha</label>
             <input id="fecha" name="fecha" type="date" [min]="fechaMinima"
-              [(ngModel)]="fecha" required>
+              [(ngModel)]="fecha" (ngModelChange)="ajustarHoraDisponible()" required>
           </div>
 
           <div class="campo">
             <label for="horaCita">Hora de inicio</label>
             <select id="horaCita" name="horaCita" [(ngModel)]="horaCita" required>
-              @for (hora of horas; track hora) {
-                <option [ngValue]="hora">{{ hora }}:00</option>
+              @for (hora of horasDisponibles; track hora) {
+                <option [ngValue]="hora">{{ formatearHora(hora) }}</option>
               }
             </select>
           </div>
 
           <div class="campo">
             <label for="tiempoCita">Duración</label>
-            <select id="tiempoCita" name="tiempoCita" [(ngModel)]="tiempoCita" required>
+            <select id="tiempoCita" name="tiempoCita" [(ngModel)]="tiempoCita"
+              (ngModelChange)="ajustarHoraDisponible()" required>
               <option [ngValue]="2">2 horas</option>
               <option [ngValue]="3">3 horas</option>
             </select>

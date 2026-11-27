@@ -204,6 +204,7 @@
 import { Component, EventEmitter, inject, Input, OnInit, Output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Cita, CitaService, EstadoCita, HorarioAtencion } from '../../../service/cita/cita.service';
+import { formatearHora as formatearHora12 } from '../../../utilidades/formato-hora';
 
 interface CupoDisponible {
   hora: number;
@@ -231,6 +232,7 @@ interface CitaCalendario extends Cita {
 })
 export class ListaCitas implements OnInit {
   private citaService = inject(CitaService);
+  readonly formatearHora = formatearHora12;
 
   @Input() vista: 'cliente' | 'admin' = 'cliente';
   @Input() modoAdmin: 'citas' | 'calendario' = 'citas';
@@ -256,12 +258,12 @@ export class ListaCitas implements OnInit {
   fechaEdicion = '';
   horaEdicion = 8;
   duracionEdicion: 2 | 3 = 2;
-  readonly horasEdicion = Array.from({ length: 10 }, (_, i) => 8 + i);
+  readonly horasEdicion = Array.from({ length: 12 }, (_, i) => 8 + i);
 
   /** Lunes de la semana mostrada (YYYY-MM-DD) */
   readonly semanaInicio = signal<string>(this.lunesDeLaSemana(this.hoyIso()));
 
-  readonly horas: number[] = Array.from({ length: 10 }, (_, i) => 8 + i); // 8..17
+  readonly horas: number[] = Array.from({ length: 12 }, (_, i) => 8 + i); // 8..19
 
   // ---------- Navegación de semanas ----------
   semanaAnterior(): void {
@@ -369,12 +371,13 @@ export class ListaCitas implements OnInit {
     const citas = this.citasSeleccionadas;
     const cupos: CupoDisponible[] = [];
     const duracion = this.duracionSeleccionada;
-    const horario = this.horariosPorDia[this.fechaSeleccionada] ?? { horaInicio: 8, horaFin: 17 };
+    const horario = this.horariosPorDia[this.fechaSeleccionada] ?? { horaInicio: 8, horaFin: 19 };
     const ultimaHoraInicio = horario.horaFin - duracion;
+    if (citas.length >= 5) return [];
     const yaHayCitaLarga = citas.some((cita) => cita.tiempoCita === 3);
 
     for (let hora = horario.horaInicio; hora <= ultimaHoraInicio; hora += 1) {
-      if (duracion === 3 && (yaHayCitaLarga || (hora !== horario.horaInicio && hora + 3 !== horario.horaFin))) continue;
+      if (duracion === 3 && (yaHayCitaLarga || (hora !== 8 && hora !== 16))) continue;
       const seCruza = citas.some(
         (cita) => hora < cita.horaCita + cita.tiempoCita && cita.horaCita < hora + duracion
       );
@@ -412,19 +415,20 @@ export class ListaCitas implements OnInit {
   get horasEdicionDisponibles(): number[] {
     if (!this.citaEnEdicion || !this.fechaEdicionValida) return [];
 
-    const horario = this.horariosPorDia[this.fechaEdicion] ?? { horaInicio: 8, horaFin: 17 };
+    const horario = this.horariosPorDia[this.fechaEdicion] ?? { horaInicio: 8, horaFin: 19 };
     const citasDelDia = this.citas().filter((cita) =>
       cita.idCita !== this.citaEnEdicion?.idCita &&
       cita.estadoCita !== 'RECHAZADA' &&
       this.fechaDeCita(cita) === this.fechaEdicion
     );
+    if (citasDelDia.length >= 5) return [];
     const yaHayCitaLarga = citasDelDia.some((cita) => cita.tiempoCita === 3);
     const disponibles: number[] = [];
 
     for (let hora = horario.horaInicio; hora + this.duracionEdicion <= horario.horaFin; hora++) {
       if (this.duracionEdicion === 3 &&
           (yaHayCitaLarga ||
-           (hora !== horario.horaInicio && hora + 3 !== horario.horaFin))) {
+           (hora !== 8 && hora !== 16))) {
         continue;
       }
       if (!this.tieneAnticipacionSuficiente(this.fechaEdicion, hora)) continue;

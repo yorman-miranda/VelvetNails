@@ -54,7 +54,7 @@
                 <label for="horaInicio">Desde</label>
                 <select id="horaInicio" name="horaInicio" [(ngModel)]="horaInicio">
                   @for (hora of horas; track hora) {
-                    <option [ngValue]="hora">{{ hora }}:00</option>
+                    <option [ngValue]="hora">{{ formatearHora(hora) }}</option>
                   }
                 </select>
               </div>
@@ -62,12 +62,12 @@
                 <label for="horaFin">Hasta</label>
                 <select id="horaFin" name="horaFin" [(ngModel)]="horaFin">
                   @for (hora of horas; track hora) {
-                    <option [ngValue]="hora">{{ hora }}:00</option>
+                    <option [ngValue]="hora">{{ formatearHora(hora) }}</option>
                   }
                 </select>
               </div>
             </div>
-            <p class="ayuda">El horario debe permitir citas de al menos 2 horas. El horario habitual es 08:00 a 17:00.</p>
+            <p class="ayuda">El horario debe permitir citas de al menos 2 horas. El horario habitual es 8:00 a. m. a 7:00 p. m.</p>
             <div class="acciones-config">
               <button type="submit" [disabled]="horarioInvalido">Guardar horario</button>
               @if (horariosPorDia[fechaHorario]) {

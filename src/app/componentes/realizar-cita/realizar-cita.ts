@@ -5,6 +5,7 @@ import { catchError, switchMap, throwError } from 'rxjs';
 import { HorarioAtencion } from '../../service/cita/cita.service';
 import { CitaService } from '../../service/cita/cita.service';
 import { ClienteCreate, ClienteService } from '../../service/cliente/cliente.service';
+import { formatearHora as formatearHora12 } from '../../utilidades/formato-hora';
 
 @Component({
   imports: [FormsModule],
@@ -15,6 +16,7 @@ import { ClienteCreate, ClienteService } from '../../service/cliente/cliente.ser
 export class RealizarCita {
   private citaService = inject(CitaService);
   private clienteService = inject(ClienteService);
+  readonly formatearHora = formatearHora12;
 
   @Input() fechaInicial = '';
   @Input() horaInicial = 8;
@@ -26,7 +28,7 @@ export class RealizarCita {
   @Output() volverInicio = new EventEmitter<void>();
 
   readonly fechaMinima = this.fechaAgendableDesde();
-  readonly horas = Array.from({ length: 10 }, (_, indice) => indice + 8);
+  readonly horas = Array.from({ length: 12 }, (_, indice) => indice + 8);
   fecha = this.fechaMinima;
   horaCita = 8;
   tiempoCita: 2 | 3 = 2;
@@ -43,6 +45,21 @@ export class RealizarCita {
 
   get citaInvalida(): boolean {
     return !this.fechaValida(this.fecha) || !this.horarioValido();
+  }
+
+  get horasDisponibles(): number[] {
+    const horario = this.horariosPorDia[this.fecha] ?? { horaInicio: 8, horaFin: 19 };
+    return this.horas.filter((hora) =>
+      hora >= horario.horaInicio &&
+      hora + this.tiempoCita <= horario.horaFin &&
+      (this.tiempoCita !== 3 || hora === 8 || hora === 16)
+    );
+  }
+
+  ajustarHoraDisponible(): void {
+    if (!this.horasDisponibles.includes(this.horaCita)) {
+      this.horaCita = this.horasDisponibles[0] ?? 8;
+    }
   }
 
   crearCita(): void {
@@ -138,22 +155,12 @@ export class RealizarCita {
   }
 
   private horarioValido(): boolean {
-    const horario = this.horariosPorDia[this.fecha] ?? { horaInicio: 8, horaFin: 17 };
     if (
-      !Number.isInteger(this.horaCita) ||
-      this.horaCita < horario.horaInicio ||
-      this.horaCita + this.tiempoCita > horario.horaFin ||
       (this.tiempoCita !== 2 && this.tiempoCita !== 3)
     ) {
       return false;
     }
 
-    if (this.tiempoCita === 3 &&
-        this.horaCita !== horario.horaInicio &&
-        this.horaCita + this.tiempoCita !== horario.horaFin) {
-      return false;
-    }
-
-    return true;
+    return this.horasDisponibles.includes(this.horaCita);
   }
 }

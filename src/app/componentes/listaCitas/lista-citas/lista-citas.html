@@ -74,7 +74,7 @@
               @for (cita of dia.citas; track cita.idCita) {
                 <article class="tarjeta-cita">
                   <div class="tarjeta-top">
-                    <time class="hora">{{ cita.horaCita }}:00</time>
+                    <time class="hora">{{ formatearHora(cita.horaCita) }}</time>
                     <button
                       type="button"
                       class="boton-asistencia"
@@ -137,7 +137,7 @@
           <div class="ocupaciones">
             <h3>Horarios ocupados</h3>
             @for (cita of citasSeleccionadas; track cita.idCita) {
-              <span class="ocupado">{{ cita.horaCita }}:00 · {{ cita.tiempoCita }} h</span>
+              <span class="ocupado">{{ formatearHora(cita.horaCita) }} · {{ cita.tiempoCita }} h</span>
             }
           </div>
         }
@@ -153,7 +153,7 @@
                   [class.reservable]="permiteAgendar"
                   [disabled]="!permiteAgendar"
                   (click)="agendarCupo(cupo)">
-                  {{ cupo.hora }}:00
+                  {{ formatearHora(cupo.hora) }}
                   @if (permiteAgendar) {
                     <span>Agendar</span>
                   }
@@ -167,7 +167,7 @@
 
         @if (duracionSeleccionada === 3) {
           <p class="nota-regla">
-            La cita de 3 horas solo puede ser la primera (08:00) o la última (14:00) del día,
+            La cita de 3 horas solo puede ser la primera (8:00 a. m.) o la última (2:00 p. m.) del día,
             y solo se permite una por día.
           </p>
         }
@@ -184,7 +184,7 @@
     <header class="encabezado">
       <p class="etiqueta">AGENDA</p>
       <h1 id="titulo-cronograma">Agenda tu cita</h1>
-      <p>Horario de atención: 08:00 a 17:00. Las citas duran 2 o 3 horas.</p>
+      <p>Horario de atención: 8:00 a. m. a 7:00 p. m. Se permiten hasta 5 citas al día.</p>
     </header>
   }
 
@@ -239,7 +239,7 @@
               [class.confirmada]="estadoCitaDe(cita) === 'CONFIRMADA'">
               <div class="cita-admin-detalle">
                 <p class="cita-admin-fecha">
-                  {{ cita.dia }}/{{ cita.mes }}/{{ cita.anio }} · {{ cita.horaCita }}:00
+                  {{ cita.dia }}/{{ cita.mes }}/{{ cita.anio }} · {{ formatearHora(cita.horaCita) }}
                   <span>{{ cita.tiempoCita }} h</span>
                 </p>
                 <h3>{{ cita.cliente.nombre }} {{ cita.cliente.apellido }}</h3>
@@ -295,7 +295,7 @@
                       Hora de inicio
                       <select name="horaEdicion" [(ngModel)]="horaEdicion" required>
                         @for (hora of horasEdicionDisponibles; track hora) {
-                          <option [ngValue]="hora">{{ hora }}:00</option>
+                          <option [ngValue]="hora">{{ formatearHora(hora) }}</option>
                         }
                       </select>
                     </label>
@@ -371,7 +371,7 @@
 
               @for (hora of horas; track hora; let fila = $index) {
                 <div class="calendario-hora"
-                  [style.grid-row]="fila + 2" [style.grid-column]="1">{{ hora }}:00</div>
+                  [style.grid-row]="fila + 2" [style.grid-column]="1">{{ formatearHora(hora) }}</div>
                 @for (dia of diasSemana; track dia.fecha; let columna = $index) {
                   <div class="calendario-celda"
                     [class.es-hoy]="dia.esHoy"
@@ -388,11 +388,12 @@
                   [style.grid-row]="(cita.fila + 2) + ' / span ' + cita.span"
                   [style.grid-column]="cita.columna + 2"
                   [attr.aria-label]="'Cita de ' + cita.cliente.nombre + ' ' + cita.cliente.apellido +
-                    ', ' + cita.dia + '/' + cita.mes + '/' + cita.anio + ' de ' + cita.horaCita +
-                    ':00 a ' + (cita.horaCita + cita.tiempoCita) + ':00'"
+                    ', ' + cita.dia + '/' + cita.mes + '/' + cita.anio + ' de ' +
+                    formatearHora(cita.horaCita) + ' a ' +
+                    formatearHora(cita.horaCita + cita.tiempoCita)"
                   [attr.aria-pressed]="citaCalendarioSeleccionada()?.idCita === cita.idCita"
                   (click)="seleccionarCitaCalendario(cita)">
-                  <time>{{ cita.horaCita }}:00–{{ cita.horaCita + cita.tiempoCita }}:00</time>
+                  <time>{{ formatearHora(cita.horaCita) }}–{{ formatearHora(cita.horaCita + cita.tiempoCita) }}</time>
                 </button>
               }
             </div>
@@ -414,7 +415,7 @@
                 <div><dt>Documento</dt><dd>{{ cita.cliente.documento }}</dd></div>
                 <div><dt>Teléfono</dt><dd><a [href]="'tel:' + cita.cliente.telefono">{{ cita.cliente.telefono }}</a></dd></div>
                 <div><dt>Fecha</dt><dd>{{ cita.dia }}/{{ cita.mes }}/{{ cita.anio }}</dd></div>
-                <div><dt>Hora</dt><dd>{{ cita.horaCita }}:00 · {{ cita.tiempoCita }} horas</dd></div>
+                <div><dt>Hora</dt><dd>{{ formatearHora(cita.horaCita) }} · {{ cita.tiempoCita }} horas</dd></div>
                 <div><dt>Pago</dt><dd>{{ estadoCitaDe(cita) === 'PENDIENTE_PAGO' ? 'Pendiente' :
                   estadoCitaDe(cita) === 'CONFIRMADA' ? 'Confirmado' : 'Rechazado' }}</dd></div>
               </dl>
@@ -440,7 +441,7 @@
         <div class="icono-panel cliente-icono" aria-hidden="true">◷</div>
         <div>
           <h2 id="titulo-disponibilidad">Horario de atención</h2>
-          <p>Horario habitual: 08:00 a 17:00. Selecciona un cupo libre; pueden existir horarios especiales por fecha.</p>
+          <p>Horario habitual: 8:00 a. m. a 7:00 p. m. Selecciona un cupo libre; pueden existir horarios especiales por fecha.</p>
         </div>
       </header>
 
@@ -489,7 +490,7 @@
             @for (hora of horas; track hora; let fila = $index) {
               <div class="calendario-hora"
                    [style.grid-row]="fila + 2"
-                   [style.grid-column]="1">{{ hora }}:00</div>
+                   [style.grid-column]="1">{{ formatearHora(hora) }}</div>
               @for (dia of diasSemana; track dia.fecha; let col = $index) {
                 <div class="calendario-celda"
                      [style.grid-row]="fila + 2"
@@ -501,7 +502,7 @@
                       @if (cupo.hora === hora && dia.fecha === fechaSeleccionada) {
                         <button type="button" class="cupo-calendario"
                                 (click)="agendarCupo(cupo)">
-                          {{ cupo.hora }}:00 · {{ cupo.duracion }}h
+                          {{ formatearHora(cupo.hora) }} · {{ cupo.duracion }}h
                         </button>
                       }
                     }
@@ -513,9 +514,9 @@
               <article class="cita-calendario ocupada"
                        [style.grid-row]="(cita.fila + 2) + ' / span ' + cita.span"
                        [style.grid-column]="cita.columna + 2"
-                       [attr.aria-label]="'Ocupado de ' + cita.horaCita + ':00 a ' +
-                         (cita.horaCita + cita.tiempoCita) + ':00'">
-                <time class="cita-hora">{{ cita.horaCita }}:00</time>
+                       [attr.aria-label]="'Ocupado de ' + formatearHora(cita.horaCita) + ' a ' +
+                         formatearHora(cita.horaCita + cita.tiempoCita)">
+                <time class="cita-hora">{{ formatearHora(cita.horaCita) }}</time>
                 <p class="cita-duracion">Ocupado · {{ cita.tiempoCita }} h</p>
               </article>
             }
@@ -523,7 +524,7 @@
         </div>
 
         <p class="nota-regla">
-          La cita de 3 horas solo puede ser la primera (08:00) o la última (14:00) del día,
+          La cita de 3 horas solo puede iniciar a las 8:00 a. m. o a las 4:00 p. m.,
           y solo se permite una por día.
         </p>
       }

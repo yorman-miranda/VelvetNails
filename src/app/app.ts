@@ -134,8 +134,12 @@ export class App implements OnInit {
     if (this.diasCerrados().includes(cupo.fecha)) {
       return;
     }
-    const horario = this.horariosPorDia()[cupo.fecha] ?? { horaInicio: 8, horaFin: 17 };
-    if (cupo.hora < horario.horaInicio || cupo.hora + cupo.duracion > horario.horaFin) {
+    const horario = this.horariosPorDia()[cupo.fecha] ?? { horaInicio: 8, horaFin: 19 };
+    if (
+      cupo.hora < horario.horaInicio ||
+      cupo.hora + cupo.duracion > horario.horaFin ||
+      (cupo.duracion === 3 && cupo.hora !== 8 && cupo.hora !== 16)
+    ) {
       return;
     }
     this.mensajeReserva.set('');
@@ -177,7 +181,7 @@ export class App implements OnInit {
         Number.isInteger(horaInicio) &&
         Number.isInteger(horaFin) &&
         horaInicio >= 8 &&
-        horaFin <= 17 &&
+        horaFin <= 19 &&
         horaFin - horaInicio >= 2;
   }
 }

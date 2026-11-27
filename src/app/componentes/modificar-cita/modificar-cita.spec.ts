@@ -76,8 +76,8 @@ describe('ModificarCita', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Buscando...');
   });
 
-  it('offers start hours from 08:00 through 17:00', () => {
-    expect(component.horas).toEqual([8, 9, 10, 11, 12, 13, 14, 15, 16, 17]);
+  it('offers start hours from 08:00 through 19:00', () => {
+    expect(component.horas).toEqual([8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]);
   });
 
   it('supports phone searches with multiple matching clients', () => {

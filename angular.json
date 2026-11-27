@@ -22,6 +22,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "VelvetNails.ico",
+                "input": "src",
+                "output": "/"
               }
             ],
             "styles": [
