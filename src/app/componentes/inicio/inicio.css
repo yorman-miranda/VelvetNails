@@ -44,6 +44,28 @@ h1 {
   text-align: center;
 }
 
+.info-pago-inicio {
+  display: grid;
+  gap: 7px;
+  margin: -12px 0 22px;
+  padding: 14px 16px;
+  border: 1px solid #f1d29a;
+  border-radius: 12px;
+  background: #fff8e8;
+  color: #79551f;
+  line-height: 1.5;
+}
+
+.info-pago-inicio p {
+  margin: 0;
+}
+
+.info-pago-inicio a {
+  color: #684f5d;
+  font-weight: 700;
+  text-underline-offset: 2px;
+}
+
 .opciones {
   display: grid;
   gap: 12px;

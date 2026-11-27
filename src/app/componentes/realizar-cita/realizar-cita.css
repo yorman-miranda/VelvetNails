@@ -51,6 +51,8 @@ h1 {
 }
 
 .aviso-pago {
+  display: grid;
+  gap: 8px;
   margin: 0 0 24px;
   padding: 14px 16px;
   border: 1px solid #f1d29a;
@@ -58,6 +60,16 @@ h1 {
   background: #fff8e8;
   color: #79551f;
   line-height: 1.5;
+}
+
+.aviso-pago p {
+  margin: 0;
+}
+
+.aviso-pago a {
+  color: #684f5d;
+  font-weight: 700;
+  text-underline-offset: 2px;
 }
 
 fieldset {

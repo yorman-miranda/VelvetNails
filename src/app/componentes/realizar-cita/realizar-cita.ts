@@ -23,6 +23,7 @@ export class RealizarCita {
   @Input() horariosPorDia: Record<string, HorarioAtencion> = {};
   @Output() citaCreada = new EventEmitter<void>();
   @Output() cancelar = new EventEmitter<void>();
+  @Output() volverInicio = new EventEmitter<void>();
 
   readonly fechaMinima = this.fechaAgendableDesde();
   readonly horas = Array.from({ length: 10 }, (_, indice) => indice + 8);

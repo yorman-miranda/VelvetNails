@@ -6,10 +6,18 @@
       <p class="descripcion">Completa tus datos. El cupo quedará reservado provisionalmente mientras se verifica el adelanto.</p>
     </header>
 
-    <p class="aviso-pago" role="alert">
-      La solicitud quedará pendiente de pago. El administrador confirmará la cita cuando verifique
-      el adelanto; si la rechaza, el horario volverá a estar disponible.
-    </p>
+    <aside class="aviso-pago" aria-label="Información de pago y contacto">
+      <p><strong>Pago para agendar:</strong> realiza el pago de <strong>$20.000 COP</strong> a Nequi
+        <strong>3113606853</strong>.</p>
+      <p>La cita se confirmará cuando el administrador verifique el pago; si la solicitud se rechaza,
+        el horario volverá a estar disponible.</p>
+      <p>¿Tienes dudas?
+        <a href="https://wa.me/573188873072" target="_blank" rel="noopener noreferrer">
+          Escríbenos por WhatsApp
+        </a>
+        al +57 318 887 3072.
+      </p>
+    </aside>
 
     <form (ngSubmit)="crearCita()" #formulario="ngForm">
       <fieldset [disabled]="enviando">
@@ -80,6 +88,9 @@
       <div class="acciones">
         <button type="button" class="secundario" [disabled]="enviando" (click)="cancelar.emit()">
           Ver horarios
+        </button>
+        <button type="button" class="secundario" [disabled]="enviando" (click)="volverInicio.emit()">
+          Volver al inicio
         </button>
         <button type="submit" [disabled]="enviando || formulario.invalid">
           {{ enviando ? 'Agendando...' : 'Confirmar cita' }}

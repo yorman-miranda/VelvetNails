@@ -209,12 +209,12 @@ app-panel-administrador .evento-cita-admin {
   z-index: 1;
   display: flex;
   min-width: 0;
-  height: 32px;
+  height: auto;
   min-height: 0;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  align-self: start;
+  align-self: stretch;
   justify-self: stretch;
   gap: 3px;
   margin: 2px;

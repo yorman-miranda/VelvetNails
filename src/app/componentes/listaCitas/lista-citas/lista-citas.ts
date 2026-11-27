@@ -328,11 +328,6 @@ export class ListaCitas implements OnInit {
       .filter((c): c is CitaCalendario => c !== null);
   }
 
-  /** Citas de una columna concreta */
-  citasDeColumna(columna: number): CitaCalendario[] {
-    return this.citasCalendario.filter((c) => c.columna === columna);
-  }
-
   seleccionarCitaCalendario(cita: Cita): void {
     this.citaCalendarioSeleccionada.set(cita);
   }

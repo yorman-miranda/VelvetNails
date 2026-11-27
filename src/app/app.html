@@ -46,7 +46,8 @@
     [diasCerrados]="diasCerrados()"
     [horariosPorDia]="horariosPorDia()"
     (citaCreada)="citaCreada()"
-    (cancelar)="cancelarReserva()" />
+    (cancelar)="cancelarReserva()"
+    (volverInicio)="volverInicio()" />
 } @else if (vista() === 'modificar') {
   <nav class="barra-navegacion" aria-label="Navegación">
     <button type="button" (click)="volverInicio()">← Inicio</button>

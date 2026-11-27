@@ -163,6 +163,24 @@ describe('ListaCitas', () => {
     expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
   });
 
+  it('renders occupied appointments across their full duration', () => {
+    const [anio, mes, dia] = component.diasSemana[2].fecha.split('-').map(Number);
+    component.citas.set([{
+      ...citaPendiente,
+      dia,
+      mes,
+      anio,
+      horaCita: 8,
+      tiempoCita: 2,
+    }]);
+    fixture.detectChanges();
+
+    const evento = fixture.nativeElement.querySelector('.cita-calendario.ocupada') as HTMLElement;
+    expect(evento).not.toBeNull();
+    expect(evento.style.gridRow).toBe('2 / span 2');
+    expect(evento.textContent).toContain('Ocupado · 2 h');
+  });
+
   it('releases rejected appointments from public availability', () => {
     const fecha = fechaFutura();
     component.fechaSeleccionada = fecha;

@@ -24,6 +24,17 @@ describe('App', () => {
     expect(compiled.querySelector('h1')?.textContent).toContain('Hello, frontend');
   });
 
+  it('shows payment and WhatsApp contact details on the home screen', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+
+    const aviso = fixture.nativeElement.querySelector('.info-pago-inicio') as HTMLElement;
+    expect(aviso.textContent).toContain('$20.000 COP');
+    expect(aviso.textContent).toContain('3113606853');
+    expect((aviso.querySelector('a') as HTMLAnchorElement).href)
+      .toBe('https://wa.me/573188873072');
+  });
+
   it('opens the client appointment form from the booking action', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();

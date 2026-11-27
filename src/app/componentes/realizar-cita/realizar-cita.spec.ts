@@ -44,6 +44,29 @@ describe('RealizarCita', () => {
     expect(component).toBeTruthy();
   });
 
+  it('shows the required payment and WhatsApp contact details', () => {
+    fixture.detectChanges();
+
+    const aviso = fixture.nativeElement.querySelector('.aviso-pago') as HTMLElement;
+    const contacto = aviso.querySelector('a') as HTMLAnchorElement;
+    expect(aviso.textContent).toContain('$20.000 COP');
+    expect(aviso.textContent).toContain('3113606853');
+    expect(contacto.href).toBe('https://wa.me/573188873072');
+  });
+
+  it('emits the home navigation action from its return button', () => {
+    const volverInicio = vi.fn();
+    component.volverInicio.subscribe(volverInicio);
+    fixture.detectChanges();
+
+    const botones = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
+    const boton = botones.find((element) => element.textContent?.includes('Volver al inicio'));
+    expect(boton).toBeDefined();
+    boton?.click();
+
+    expect(volverInicio).toHaveBeenCalledOnce();
+  });
+
   it('offers start hours from 08:00 through 17:00', () => {
     expect(component.horas).toEqual([8, 9, 10, 11, 12, 13, 14, 15, 16, 17]);
   });

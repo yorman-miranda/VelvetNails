@@ -433,6 +433,7 @@ button {
 
 /* Grid principal: 1 columna de horas + 7 días */
 .calendario {
+  position: relative;
   display: grid;
   grid-template-columns: 60px repeat(7, minmax(90px, 1fr));
   border: 1px solid #f1d4df;
@@ -529,6 +530,7 @@ button {
 /* Cita dentro del calendario */
 .cita-calendario {
   position: absolute;
+  z-index: 1;
   inset: 2px;
   display: flex;
   flex-direction: column;
