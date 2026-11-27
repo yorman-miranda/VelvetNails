@@ -52,7 +52,8 @@ export class RealizarCita {
     return this.horas.filter((hora) =>
       hora >= horario.horaInicio &&
       hora + this.tiempoCita <= horario.horaFin &&
-      (this.tiempoCita !== 3 || hora === 8 || hora === 16)
+      (this.tiempoCita !== 3 || hora === 8 || hora === 16) &&
+      this.cumpleAnticipacionMinima(this.fecha, hora)
     );
   }
 
@@ -137,8 +138,14 @@ export class RealizarCita {
 
   private fechaAgendableDesde(): string {
     const fecha = new Date();
-    fecha.setDate(fecha.getDate() + 2);
     return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
+  }
+
+  cumpleAnticipacionMinima(fecha: string, hora: number): boolean {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return false;
+    const [anio, mes, dia] = fecha.split('-').map(Number);
+    const inicio = new Date(anio, mes - 1, dia, hora);
+    return inicio.getTime() >= Date.now() + 24 * 60 * 60 * 1000;
   }
 
   private fechaValida(fecha: string): boolean {

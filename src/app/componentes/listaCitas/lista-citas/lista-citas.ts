@@ -207,6 +207,7 @@ import { Cita, CitaService, EstadoCita, HorarioAtencion } from '../../../service
 import { formatearHora as formatearHora12 } from '../../../utilidades/formato-hora';
 
 interface CupoDisponible {
+  fecha: string;
   hora: number;
   duracion: 2 | 3;
 }
@@ -222,6 +223,10 @@ interface CitaCalendario extends Cita {
   fila: number;       // índice de hora (0 = 8:00)
   span: number;       // cuántas horas ocupa
   columna: number;    // 0 = lunes ... 6 = domingo
+}
+
+interface DiaCalendarioMovil extends DiaSemana {
+  citas: CitaCalendario[];
 }
 
 @Component({
@@ -251,7 +256,6 @@ export class ListaCitas implements OnInit {
   readonly citaCalendarioSeleccionada = signal<Cita | null>(null);
 
   readonly fechaMinima = this.hoyIso();
-  readonly fechaMinimaAgendable = this.sumarDias(this.fechaMinima, 2);
   fechaSeleccionada = this.fechaMinima;
   duracionSeleccionada: 2 | 3 = 2;
   citaEnEdicion: Cita | null = null;
@@ -330,6 +334,16 @@ export class ListaCitas implements OnInit {
       .filter((c): c is CitaCalendario => c !== null);
   }
 
+  get agendaMovil(): DiaCalendarioMovil[] {
+    const citas = this.citasCalendario;
+    return this.diasSemana
+      .map((dia) => ({
+        ...dia,
+        citas: citas.filter((cita) => this.fechaDeCita(cita) === dia.fecha),
+      }))
+      .filter((dia) => dia.citas.length > 0);
+  }
+
   seleccionarCitaCalendario(cita: Cita): void {
     this.citaCalendarioSeleccionada.set(cita);
   }
@@ -362,16 +376,20 @@ export class ListaCitas implements OnInit {
   }
 
   get cuposDisponibles(): CupoDisponible[] {
-    const fechaLimite = this.vista === 'cliente' && this.permiteAgendar
-      ? this.fechaMinimaAgendable
-      : this.fechaMinima;
-    if (!this.fechaSeleccionada || this.fechaSeleccionada < fechaLimite || this.esDiaCerrado) {
+    return this.cuposDisponiblesPara(this.fechaSeleccionada);
+  }
+
+  cuposDisponiblesPara(fecha: string): CupoDisponible[] {
+    if (!fecha || fecha < this.fechaMinima || this.diasCerrados.includes(fecha)) {
       return [];
     }
-    const citas = this.citasSeleccionadas;
+    const citas = this.citas().filter((cita) =>
+      this.fechaDeCita(cita) === fecha &&
+      cita.estadoCita !== 'RECHAZADA'
+    );
     const cupos: CupoDisponible[] = [];
     const duracion = this.duracionSeleccionada;
-    const horario = this.horariosPorDia[this.fechaSeleccionada] ?? { horaInicio: 8, horaFin: 19 };
+    const horario = this.horariosPorDia[fecha] ?? { horaInicio: 8, horaFin: 19 };
     const ultimaHoraInicio = horario.horaFin - duracion;
     if (citas.length >= 5) return [];
     const yaHayCitaLarga = citas.some((cita) => cita.tiempoCita === 3);
@@ -381,14 +399,20 @@ export class ListaCitas implements OnInit {
       const seCruza = citas.some(
         (cita) => hora < cita.horaCita + cita.tiempoCita && cita.horaCita < hora + duracion
       );
-      if (!seCruza) cupos.push({ hora, duracion });
+      if (!seCruza) cupos.push({ fecha, hora, duracion });
     }
     return cupos;
   }
 
+  esCupoAgendable(cupo: CupoDisponible): boolean {
+    const [anio, mes, dia] = cupo.fecha.split('-').map(Number);
+    const inicio = new Date(anio, mes - 1, dia, cupo.hora);
+    return inicio.getTime() >= Date.now() + 24 * 60 * 60 * 1000;
+  }
+
   ngOnInit(): void {
     if (this.vista === 'cliente' && this.permiteAgendar) {
-      this.fechaSeleccionada = this.fechaMinimaAgendable;
+      this.fechaSeleccionada = this.fechaMinima;
     }
     this.cargarCitas();
   }
@@ -517,8 +541,9 @@ export class ListaCitas implements OnInit {
   }
 
   agendarCupo(cupo: CupoDisponible): void {
+    if (!this.permiteAgendar || !this.esCupoAgendable(cupo)) return;
     this.solicitarAgendar.emit({
-      fecha: this.fechaSeleccionada,
+      fecha: cupo.fecha,
       hora: cupo.hora,
       duracion: cupo.duracion,
     });
@@ -604,6 +629,10 @@ export class ListaCitas implements OnInit {
       month: 'long',
       year: 'numeric',
     }).format(new Date(anio, mes - 1, dia));
+  }
+
+  formatearHoraCompacta(hora: number): string {
+    return `${hora % 12 || 12}${hora < 12 ? 'a' : 'p'}`;
   }
 
   private tieneAnticipacionSuficiente(fecha: string, hora: number): boolean {

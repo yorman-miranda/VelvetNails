@@ -73,19 +73,30 @@ describe('RealizarCita', () => {
 
   it('only offers three-hour slots at 08:00 or 16:00', () => {
     component.tiempoCita = 3;
+    component.fecha = fechaFutura();
 
     expect(component.horasDisponibles).toEqual([8, 16]);
   });
 
-  it('only allows booking from the day after tomorrow', () => {
-    component.fecha = fechaEnDias(0);
-    expect(component.citaInvalida).toBe(true);
+  it('requires at least 24 hours between now and the appointment start', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2030, 4, 19, 10, 0));
+    try {
+      component.fecha = '2030-05-19';
+      component.horaCita = 8;
+      expect(component.citaInvalida).toBe(true);
 
-    component.fecha = fechaEnDias(1);
-    expect(component.citaInvalida).toBe(true);
+      component.fecha = '2030-05-20';
+      component.horaCita = 9;
+      expect(component.citaInvalida).toBe(true);
+      expect(component.horasDisponibles).not.toContain(9);
 
-    component.fecha = fechaEnDias(2);
-    expect(component.citaInvalida).toBe(false);
+      component.horaCita = 10;
+      expect(component.citaInvalida).toBe(false);
+      expect(component.horasDisponibles).toContain(10);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('does not submit blank or whitespace-only client data', () => {

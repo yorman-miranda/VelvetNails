@@ -394,6 +394,14 @@ button {
   gap: 14px;
 }
 
+.agenda-movil {
+  display: none;
+}
+
+.hora-calendario-compacta {
+  display: none;
+}
+
 .calendario-nav {
   display: flex;
   align-items: center;
@@ -529,12 +537,14 @@ button {
 
 /* Cita dentro del calendario */
 .cita-calendario {
-  position: absolute;
   z-index: 1;
-  inset: 2px;
   display: flex;
+  min-width: 0;
   flex-direction: column;
   gap: 2px;
+  align-self: stretch;
+  justify-self: stretch;
+  margin: 2px;
   padding: 6px 8px;
   border-left: 3px solid #c46c91;
   border-radius: 8px;
@@ -547,101 +557,15 @@ button {
 
 .cita-calendario.ocupada {
   background: #f4eff2;
-  border-left-color: #b8a7b0;
+  border: 1px solid #55464d;
+  border-left-width: 3px;
   color: #806b76;
-}
-
-.cita-calendario-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px;
-}
-
-.cita-hora {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.cita-calendario h4 {
-  margin: 0;
-  font-size: 0.75rem;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.cita-telefono {
-  color: #8d4968;
-  font-size: 0.68rem;
-  text-decoration: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .cita-duracion {
   margin: 0;
   color: #806b76;
   font-size: 0.66rem;
-}
-
-.boton-pago {
-  align-self: flex-start;
-  min-height: 20px;
-  padding: 2px 3px;
-  border: 1px solid #e8c8d6;
-  border-radius: 6px;
-  background: #fff;
-  color: #9c5d24;
-  cursor: pointer;
-  font-size: 0.58rem;
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-.boton-pago.confirmada {
-  border-color: #b7ddc1;
-  background: #edf8ef;
-  color: #28643a;
-}
-
-.boton-pago.rechazada { color: #9c302a; }
-
-.acciones-estado-cita {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-}
-
-.boton-pago:disabled {
-  cursor: wait;
-  opacity: 0.6;
-}
-
-.boton-asistencia-mini {
-  min-width: 22px;
-  min-height: 22px;
-  padding: 0;
-  border: 1px solid #e8c8d6;
-  border-radius: 50%;
-  background: #fff;
-  color: #8d4968;
-  cursor: pointer;
-  font-size: 0.7rem;
-  line-height: 1;
-}
-
-.boton-asistencia-mini.confirmada {
-  border-color: #b7ddc1;
-  background: #edf8ef;
-  color: #28643a;
-}
-
-.boton-asistencia-mini:disabled {
-  cursor: wait;
-  opacity: 0.6;
 }
 
 /* Cupo reservable dentro del calendario */
@@ -663,9 +587,32 @@ button {
   border-style: solid;
 }
 
+span.cupo-calendario {
+  cursor: default;
+}
+
 @media (max-width: 720px) {
+  .calendario-wrapper-admin > .calendario {
+    display: none;
+  }
+
+  .agenda-movil {
+    display: grid;
+    gap: 12px;
+  }
+
+  .cita-agenda-movil {
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+  }
+
   .calendario {
-    grid-template-columns: 48px repeat(7, minmax(72px, 1fr));
+    min-width: 0;
+    grid-template-columns: 40px repeat(7, minmax(0, 1fr));
   }
   .calendario-dia-header {
     font-size: 0.68rem;
@@ -678,8 +625,48 @@ button {
     font-size: 0.64rem;
     padding: 4px 6px;
   }
-  .cita-calendario h4 {
-    font-size: 0.66rem;
+}
+
+@media (max-width: 400px) {
+  .panel-disponibilidad .calendario {
+    grid-template-columns: 28px repeat(7, minmax(0, 1fr));
+  }
+
+  .panel-disponibilidad .calendario-dia-header {
+    min-width: 0;
+    padding: 6px 1px;
+    font-size: 0.58rem;
+  }
+
+  .panel-disponibilidad .calendario-hora {
+    padding: 8px 2px;
+    font-size: 0.58rem;
+  }
+
+  .panel-disponibilidad .hora-calendario-completa {
+    display: none;
+  }
+
+  .panel-disponibilidad .hora-calendario-compacta {
+    display: inline;
+  }
+
+  .panel-disponibilidad .cita-calendario.ocupada {
+    align-items: center;
+    justify-content: center;
+    padding: 0 1px;
+    font-size: 0.46rem;
+  }
+
+  .panel-disponibilidad .cita-duracion {
+    font-size: 0.46rem;
+    white-space: nowrap;
+  }
+
+  .panel-disponibilidad .cupo-calendario {
+    inset: 3px;
+    padding: 0;
+    font-size: 0.48rem;
   }
 }
 

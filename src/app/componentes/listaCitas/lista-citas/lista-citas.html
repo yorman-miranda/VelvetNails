@@ -345,7 +345,7 @@
         } @else if (errorCarga()) {
           <p class="estado error" role="alert">{{ errorCarga() }}</p>
         } @else {
-          <div class="calendario-wrapper">
+          <div class="calendario-wrapper calendario-wrapper-admin">
             <div class="calendario-nav">
               <button type="button" class="boton-nav" (click)="semanaAnterior()" aria-label="Semana anterior">‹</button>
               <button type="button" class="boton-nav boton-hoy" (click)="irASemanaActual()">Hoy</button>
@@ -397,6 +397,36 @@
                 </button>
               }
             </div>
+
+            <div class="agenda-movil" aria-label="Citas de la semana">
+              @for (dia of agendaMovil; track dia.fecha) {
+                <section class="dia-agenda-movil" [class.es-hoy]="dia.esHoy">
+                  <h3>{{ dia.etiqueta }}</h3>
+                  <div class="citas-agenda-movil">
+                    @for (cita of dia.citas; track cita.idCita) {
+                      <button type="button" class="cita-agenda-movil tarjeta-cita-admin"
+                        [class.pendiente]="estadoCitaDe(cita) === 'PENDIENTE_PAGO'"
+                        [class.confirmada]="estadoCitaDe(cita) === 'CONFIRMADA'"
+                        [attr.aria-label]="'Cita de ' + cita.cliente.nombre + ' ' + cita.cliente.apellido +
+                          ', ' + formatearHora(cita.horaCita) + ', ' + cita.tiempoCita + ' horas. Ver detalles'"
+                        (click)="seleccionarCitaCalendario(cita)">
+                        <span class="cita-admin-detalle">
+                          <span class="cita-admin-fecha">
+                            {{ formatearHora(cita.horaCita) }}–{{ formatearHora(cita.horaCita + cita.tiempoCita) }}
+                            <span>{{ cita.tiempoCita }} h</span>
+                          </span>
+                          <h3>{{ cita.cliente.nombre }} {{ cita.cliente.apellido }}</h3>
+                        </span>
+                        <span class="etiqueta-estado-cita"
+                          [class.pendiente]="estadoCitaDe(cita) === 'PENDIENTE_PAGO'">
+                          {{ estadoCitaDe(cita) === 'PENDIENTE_PAGO' ? 'Pendiente de pago' : 'Confirmada' }}
+                        </span>
+                      </button>
+                    }
+                  </div>
+                </section>
+              }
+            </div>
           </div>
 
           @if (citaCalendarioSeleccionada(); as cita) {
@@ -441,7 +471,7 @@
         <div class="icono-panel cliente-icono" aria-hidden="true">◷</div>
         <div>
           <h2 id="titulo-disponibilidad">Horario de atención</h2>
-          <p>Horario habitual: 8:00 a. m. a 7:00 p. m. Selecciona un cupo libre; pueden existir horarios especiales por fecha.</p>
+          <p>Horario habitual: 8:00 a. m. a 7:00 p. m. Agenda con al menos 24 horas de anticipación; pueden existir horarios especiales por fecha.</p>
         </div>
       </header>
 
@@ -479,7 +509,7 @@
                    [class.es-hoy]="dia.esHoy"
                    [class.es-cerrado]="dia.esCerrado"
                    [class.seleccionado]="fechaSeleccionada === dia.fecha"
-                   [disabled]="dia.fecha < (permiteAgendar ? fechaMinimaAgendable : fechaMinima)"
+                   [disabled]="dia.fecha < fechaMinima"
                    [attr.aria-label]="'Seleccionar ' + formatearFecha(dia.fecha)"
                    [attr.aria-pressed]="fechaSeleccionada === dia.fecha"
                    (click)="seleccionarFecha(dia.fecha)">
@@ -490,20 +520,25 @@
             @for (hora of horas; track hora; let fila = $index) {
               <div class="calendario-hora"
                    [style.grid-row]="fila + 2"
-                   [style.grid-column]="1">{{ formatearHora(hora) }}</div>
+                   [style.grid-column]="1">
+                <span class="hora-calendario-completa">{{ formatearHora(hora) }}</span>
+                <span class="hora-calendario-compacta">{{ formatearHoraCompacta(hora) }}</span>
+              </div>
               @for (dia of diasSemana; track dia.fecha; let col = $index) {
                 <div class="calendario-celda"
                      [style.grid-row]="fila + 2"
                      [style.grid-column]="col + 2"
                      [class.es-hoy]="dia.esHoy"
                      [class.es-cerrado]="dia.esCerrado">
-                  @if (permiteAgendar && !dia.esCerrado && dia.fecha >= fechaMinimaAgendable) {
-                    @for (cupo of cuposDisponibles; track cupo.hora) {
-                      @if (cupo.hora === hora && dia.fecha === fechaSeleccionada) {
+                  @for (cupo of cuposDisponiblesPara(dia.fecha); track cupo.hora) {
+                    @if (cupo.hora === hora) {
+                      @if (permiteAgendar && esCupoAgendable(cupo)) {
                         <button type="button" class="cupo-calendario"
-                                (click)="agendarCupo(cupo)">
-                          {{ formatearHora(cupo.hora) }} · {{ cupo.duracion }}h
-                        </button>
+                          [attr.aria-label]="'Agendar ' + formatearFecha(cupo.fecha) + ' a las ' +
+                            formatearHora(cupo.hora) + ', duración ' + cupo.duracion + ' horas'"
+                          (click)="agendarCupo(cupo)">Libre</button>
+                      } @else {
+                        <span class="cupo-calendario consulta">Libre</span>
                       }
                     }
                   }
@@ -516,8 +551,7 @@
                        [style.grid-column]="cita.columna + 2"
                        [attr.aria-label]="'Ocupado de ' + formatearHora(cita.horaCita) + ' a ' +
                          formatearHora(cita.horaCita + cita.tiempoCita)">
-                <time class="cita-hora">{{ formatearHora(cita.horaCita) }}</time>
-                <p class="cita-duracion">Ocupado · {{ cita.tiempoCita }} h</p>
+                <p class="cita-duracion">Ocupado</p>
               </article>
             }
           </div>

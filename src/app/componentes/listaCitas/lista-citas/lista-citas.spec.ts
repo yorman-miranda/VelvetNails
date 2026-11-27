@@ -66,16 +66,61 @@ describe('ListaCitas', () => {
     expect(component.cuposDisponibles.map((cupo) => cupo.hora)).toEqual([10, 11, 12, 13]);
   });
 
-  it('does not offer booking slots today or tomorrow', () => {
+  it('calculates available hours independently for every day', () => {
     component.permiteAgendar = true;
-    component.fechaSeleccionada = fechaEnDias(0);
-    expect(component.cuposDisponibles).toEqual([]);
+    const lunes = '2030-05-20';
+    const martes = '2030-05-21';
 
-    component.fechaSeleccionada = fechaEnDias(1);
-    expect(component.cuposDisponibles).toEqual([]);
+    expect(component.cuposDisponiblesPara(lunes)[0]).toEqual({
+      fecha: lunes,
+      hora: 8,
+      duracion: 2,
+    });
+    expect(component.cuposDisponiblesPara(martes)[0]).toEqual({
+      fecha: martes,
+      hora: 8,
+      duracion: 2,
+    });
+  });
 
-    component.fechaSeleccionada = fechaEnDias(2);
-    expect(component.cuposDisponibles.length).toBeGreaterThan(0);
+  it('emits the selected day when booking a slot from the weekly grid', () => {
+    const solicitarAgendar = vi.fn();
+    component.permiteAgendar = true;
+    component.solicitarAgendar.subscribe(solicitarAgendar);
+    const fecha = '2030-05-21';
+    const cupo = component.cuposDisponiblesPara(fecha)[0];
+
+    component.agendarCupo(cupo);
+
+    expect(solicitarAgendar).toHaveBeenCalledWith({
+      fecha,
+      hora: 8,
+      duracion: 2,
+    });
+  });
+
+  it('allows booking only when the slot starts at least 24 hours ahead', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2030, 4, 19, 10, 0));
+    try {
+      expect(component.esCupoAgendable({
+        fecha: '2030-05-19',
+        hora: 17,
+        duracion: 2,
+      })).toBe(false);
+      expect(component.esCupoAgendable({
+        fecha: '2030-05-20',
+        hora: 9,
+        duracion: 2,
+      })).toBe(false);
+      expect(component.esCupoAgendable({
+        fecha: '2030-05-20',
+        hora: 10,
+        duracion: 2,
+      })).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('offers three-hour slots only at 08:00 or 16:00', () => {
@@ -178,6 +223,26 @@ describe('ListaCitas', () => {
     expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
   });
 
+  it('shows booked appointments in a readable mobile agenda', () => {
+    const [anio, mes, dia] = component.diasSemana[2].fecha.split('-').map(Number);
+    const citaSemana: Cita = { ...citaPendiente, anio, mes, dia };
+    component.vista = 'admin';
+    component.modoAdmin = 'calendario';
+    component.citas.set([citaSemana]);
+    fixture.detectChanges();
+
+    const tarjeta = fixture.nativeElement.querySelector('.cita-agenda-movil') as HTMLButtonElement;
+    expect(tarjeta).not.toBeNull();
+    expect(tarjeta.textContent).toContain('10:00 a. m.');
+    expect(tarjeta.textContent).toContain('12:00 p. m.');
+    expect(tarjeta.textContent).toContain('Ana Lopez');
+    expect(tarjeta.textContent).toContain('Pendiente de pago');
+
+    tarjeta.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="dialog"]')).not.toBeNull();
+  });
+
   it('renders occupied appointments across their full duration', () => {
     const [anio, mes, dia] = component.diasSemana[2].fecha.split('-').map(Number);
     component.citas.set([{
@@ -193,7 +258,32 @@ describe('ListaCitas', () => {
     const evento = fixture.nativeElement.querySelector('.cita-calendario.ocupada') as HTMLElement;
     expect(evento).not.toBeNull();
     expect(evento.style.gridRow).toBe('2 / span 2');
-    expect(evento.textContent).toContain('Ocupado · 2 h');
+    expect(evento.textContent.trim()).toBe('Ocupado');
+    expect(fixture.nativeElement.querySelectorAll('.calendario-dia-header')).toHaveLength(7);
+  });
+
+  it('keeps an appointment in its own day when advancing the week', () => {
+    component.semanaSiguiente();
+    const [anio, mes, dia] = component.diasSemana[0].fecha.split('-').map(Number);
+    component.citas.set([{
+      ...citaPendiente,
+      dia,
+      mes,
+      anio,
+      horaCita: 8,
+      tiempoCita: 3,
+    }]);
+    fixture.detectChanges();
+
+    const evento = fixture.nativeElement.querySelector('.cita-calendario.ocupada') as HTMLElement;
+    expect(component.citasCalendario).toHaveLength(1);
+    expect(evento.style.gridRow).toBe('2 / span 3');
+    expect(evento.style.gridColumn).toBe('2');
+  });
+
+  it('uses compact 12-hour labels for narrow calendars', () => {
+    expect(component.formatearHoraCompacta(8)).toBe('8a');
+    expect(component.formatearHoraCompacta(16)).toBe('4p');
   });
 
   it('releases rejected appointments from public availability', () => {
