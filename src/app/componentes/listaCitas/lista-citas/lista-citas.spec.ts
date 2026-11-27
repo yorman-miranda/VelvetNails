@@ -66,6 +66,17 @@ describe('ListaCitas', () => {
     expect(component.cuposDisponibles.map((cupo) => cupo.hora)).toEqual([10, 11, 12, 13]);
   });
 
+  it('shows only tomorrow slots that still meet the 24-hour notice', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2030, 4, 19, 10, 0));
+    try {
+      expect(component.cuposDisponiblesPara('2030-05-19')).toEqual([]);
+      expect(component.cuposDisponiblesPara('2030-05-20').map((cupo) => cupo.hora)[0]).toBe(10);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('calculates available hours independently for every day', () => {
     component.permiteAgendar = true;
     const lunes = '2030-05-20';
@@ -85,7 +96,6 @@ describe('ListaCitas', () => {
 
   it('emits the selected day when booking a slot from the weekly grid', () => {
     const solicitarAgendar = vi.fn();
-    component.permiteAgendar = true;
     component.solicitarAgendar.subscribe(solicitarAgendar);
     const fecha = '2030-05-21';
     const cupo = component.cuposDisponiblesPara(fecha)[0];
@@ -97,6 +107,65 @@ describe('ListaCitas', () => {
       hora: 8,
       duracion: 2,
     });
+  });
+
+  it('opens the booking flow from a valid tomorrow slot in availability mode', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2030, 4, 19, 10, 0));
+    try {
+      const solicitarAgendar = vi.fn();
+      component.permiteAgendar = false;
+      component.solicitarAgendar.subscribe(solicitarAgendar);
+      const fecha = '2030-05-20';
+      const cupo = component.cuposDisponiblesPara(fecha)[0];
+
+      expect(cupo).toBeDefined();
+      expect(component.esCupoAgendable(cupo)).toBe(true);
+      component.semanaInicio.set('2030-05-19');
+      fixture.detectChanges();
+      const botones = fixture.nativeElement.querySelectorAll(
+        'button.cupo-calendario'
+      ) as NodeListOf<HTMLButtonElement>;
+      const botonManana = Array.from(botones).find((boton) =>
+        boton.getAttribute('aria-label')?.includes('20 de mayo de 2030') &&
+        boton.getAttribute('aria-label')?.includes('10:00')
+      );
+
+      expect(botonManana).toBeDefined();
+      botonManana?.click();
+
+      expect(solicitarAgendar).toHaveBeenCalledWith({
+        fecha,
+        hora: 10,
+        duracion: 2,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('hides a slot automatically once it falls below 24 hours of notice', async () => {
+    fixture.destroy();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2030, 4, 19, 9, 0));
+    try {
+      fixture = TestBed.createComponent(ListaCitas);
+      component = fixture.componentInstance;
+      await fixture.whenStable();
+      component.semanaInicio.set('2030-05-19');
+      fixture.detectChanges();
+
+      const selector = 'button.cupo-calendario[aria-label*="20 de mayo de 2030"][aria-label*="9:00"]';
+      expect(fixture.nativeElement.querySelector(selector)).not.toBeNull();
+
+      await vi.advanceTimersByTimeAsync(1000);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector(selector)).toBeNull();
+    } finally {
+      fixture.destroy();
+      vi.useRealTimers();
+    }
   });
 
   it('allows booking only when the slot starts at least 24 hours ahead', () => {

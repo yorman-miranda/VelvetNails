@@ -27,7 +27,7 @@ export class RealizarCita {
   @Output() cancelar = new EventEmitter<void>();
   @Output() volverInicio = new EventEmitter<void>();
 
-  readonly fechaMinima = this.fechaAgendableDesde();
+  readonly fechaMinima = this.hoyIso();
   readonly horas = Array.from({ length: 12 }, (_, indice) => indice + 8);
   fecha = this.fechaMinima;
   horaCita = 8;
@@ -52,8 +52,7 @@ export class RealizarCita {
     return this.horas.filter((hora) =>
       hora >= horario.horaInicio &&
       hora + this.tiempoCita <= horario.horaFin &&
-      (this.tiempoCita !== 3 || hora === 8 || hora === 16) &&
-      this.cumpleAnticipacionMinima(this.fecha, hora)
+      (this.tiempoCita !== 3 || hora === 8 || hora === 16)
     );
   }
 
@@ -136,7 +135,7 @@ export class RealizarCita {
     };
   }
 
-  private fechaAgendableDesde(): string {
+  private hoyIso(): string {
     const fecha = new Date();
     return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
   }
@@ -168,6 +167,7 @@ export class RealizarCita {
       return false;
     }
 
-    return this.horasDisponibles.includes(this.horaCita);
+    return this.horasDisponibles.includes(this.horaCita) &&
+      this.cumpleAnticipacionMinima(this.fecha, this.horaCita);
   }
 }

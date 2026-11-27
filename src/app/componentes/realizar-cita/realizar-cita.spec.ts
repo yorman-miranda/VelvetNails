@@ -89,7 +89,7 @@ describe('RealizarCita', () => {
       component.fecha = '2030-05-20';
       component.horaCita = 9;
       expect(component.citaInvalida).toBe(true);
-      expect(component.horasDisponibles).not.toContain(9);
+      expect(component.horasDisponibles).toContain(9);
 
       component.horaCita = 10;
       expect(component.citaInvalida).toBe(false);

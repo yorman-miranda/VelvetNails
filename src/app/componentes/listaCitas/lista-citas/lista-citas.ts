@@ -201,7 +201,19 @@
 //   }
 // }
 
-import { Component, EventEmitter, inject, Input, OnInit, Output, signal } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import {
+  Component,
+  DestroyRef,
+  EventEmitter,
+  inject,
+  Input,
+  NgZone,
+  OnInit,
+  Output,
+  PLATFORM_ID,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Cita, CitaService, EstadoCita, HorarioAtencion } from '../../../service/cita/cita.service';
 import { formatearHora as formatearHora12 } from '../../../utilidades/formato-hora';
@@ -237,6 +249,9 @@ interface DiaCalendarioMovil extends DiaSemana {
 })
 export class ListaCitas implements OnInit {
   private citaService = inject(CitaService);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly zone = inject(NgZone);
+  private readonly destroyRef = inject(DestroyRef);
   readonly formatearHora = formatearHora12;
 
   @Input() vista: 'cliente' | 'admin' = 'cliente';
@@ -254,8 +269,17 @@ export class ListaCitas implements OnInit {
   readonly actualizandoId = signal<number | null>(null);
   readonly filtroEstado = signal<'PENDIENTE_PAGO' | 'CONFIRMADA'>('PENDIENTE_PAGO');
   readonly citaCalendarioSeleccionada = signal<Cita | null>(null);
+  private readonly relojActualizado = signal(Date.now());
 
-  readonly fechaMinima = this.hoyIso();
+  get fechaMinima(): string {
+    this.relojActualizado();
+    return this.hoyIso();
+  }
+
+  get fechaMinimaCupos(): string {
+    return this.sumarDias(this.fechaMinima, 1);
+  }
+
   fechaSeleccionada = this.fechaMinima;
   duracionSeleccionada: 2 | 3 = 2;
   citaEnEdicion: Cita | null = null;
@@ -380,7 +404,10 @@ export class ListaCitas implements OnInit {
   }
 
   cuposDisponiblesPara(fecha: string): CupoDisponible[] {
-    if (!fecha || fecha < this.fechaMinima || this.diasCerrados.includes(fecha)) {
+    const fechaMinimaCupos = this.vista === 'cliente'
+      ? this.fechaMinimaCupos
+      : this.fechaMinima;
+    if (!fecha || fecha < fechaMinimaCupos || this.diasCerrados.includes(fecha)) {
       return [];
     }
     const citas = this.citas().filter((cita) =>
@@ -399,18 +426,25 @@ export class ListaCitas implements OnInit {
       const seCruza = citas.some(
         (cita) => hora < cita.horaCita + cita.tiempoCita && cita.horaCita < hora + duracion
       );
-      if (!seCruza) cupos.push({ fecha, hora, duracion });
+      const cupo = { fecha, hora, duracion };
+      if (!seCruza && (this.vista !== 'cliente' || this.esCupoAgendable(cupo))) {
+        cupos.push(cupo);
+      }
     }
     return cupos;
   }
 
   esCupoAgendable(cupo: CupoDisponible): boolean {
+    this.relojActualizado();
     const [anio, mes, dia] = cupo.fecha.split('-').map(Number);
     const inicio = new Date(anio, mes - 1, dia, cupo.hora);
     return inicio.getTime() >= Date.now() + 24 * 60 * 60 * 1000;
   }
 
   ngOnInit(): void {
+    if (this.vista === 'cliente' && isPlatformBrowser(this.platformId)) {
+      this.iniciarActualizacionReloj();
+    }
     if (this.vista === 'cliente' && this.permiteAgendar) {
       this.fechaSeleccionada = this.fechaMinima;
     }
@@ -541,7 +575,7 @@ export class ListaCitas implements OnInit {
   }
 
   agendarCupo(cupo: CupoDisponible): void {
-    if (!this.permiteAgendar || !this.esCupoAgendable(cupo)) return;
+    if (this.vista === 'cliente' && !this.esCupoAgendable(cupo)) return;
     this.solicitarAgendar.emit({
       fecha: cupo.fecha,
       hora: cupo.hora,
@@ -655,6 +689,15 @@ export class ListaCitas implements OnInit {
   private hoyIso(): string {
     const hoy = new Date();
     return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+  }
+
+  private iniciarActualizacionReloj(): void {
+    this.zone.runOutsideAngular(() => {
+      const timer = setInterval(() => {
+        this.zone.run(() => this.relojActualizado.set(Date.now()));
+      }, 1000);
+      this.destroyRef.onDestroy(() => clearInterval(timer));
+    });
   }
 
   private lunesDeLaSemana(fecha: string): string {

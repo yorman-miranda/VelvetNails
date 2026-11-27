@@ -532,14 +532,13 @@
                      [class.es-cerrado]="dia.esCerrado">
                   @for (cupo of cuposDisponiblesPara(dia.fecha); track cupo.hora) {
                     @if (cupo.hora === hora) {
-                      @if (permiteAgendar && esCupoAgendable(cupo)) {
-                        <button type="button" class="cupo-calendario"
-                          [attr.aria-label]="'Agendar ' + formatearFecha(cupo.fecha) + ' a las ' +
-                            formatearHora(cupo.hora) + ', duración ' + cupo.duracion + ' horas'"
-                          (click)="agendarCupo(cupo)">Libre</button>
-                      } @else {
-                        <span class="cupo-calendario consulta">Libre</span>
-                      }
+                      <button type="button" class="cupo-calendario"
+                        [attr.aria-label]="'Abrir reserva para ' + formatearFecha(cupo.fecha) + ' a las ' +
+                          formatearHora(cupo.hora) + ', duración ' + cupo.duracion + ' horas'"
+                        [attr.title]="esCupoAgendable(cupo)
+                          ? 'Continuar con la reserva'
+                          : 'El horario requiere al menos 24 horas de anticipación'"
+                        (click)="agendarCupo(cupo)">Libre</button>
                     }
                   }
                 </div>

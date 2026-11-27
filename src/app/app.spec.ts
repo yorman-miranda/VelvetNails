@@ -50,6 +50,21 @@ describe('App', () => {
     expect(compiled.querySelector('#tiempoCita')).not.toBeNull();
   });
 
+  it('opens the booking form with the selected free slot from availability', async () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    app.abrirDisponibilidad();
+    app.seleccionarCupo({ fecha: '2030-05-20', hora: 8, duracion: 2 });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(app.vista()).toBe('formulario');
+    expect((fixture.nativeElement.querySelector('#fecha') as HTMLInputElement).value)
+      .toBe('2030-05-20');
+    expect((fixture.nativeElement.querySelector('#horaCita') as HTMLSelectElement)
+      .selectedOptions[0].textContent).toContain('8:00');
+  });
+
   it('opens appointment lookup from the modify action', async () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
